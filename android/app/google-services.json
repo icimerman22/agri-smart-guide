@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1079203745813",
+    "firebase_url": "https://agri-smart-guide-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "agri-smart-guide",
+    "storage_bucket": "agri-smart-guide.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1079203745813:android:10c036a9b126c3efef7e1c",
+        "android_client_info": {
+          "package_name": "com.getasoftware.agri_smart_guide"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3vTTX_qjDlrbQ3SjKGoiG_2_5l3os8dM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
