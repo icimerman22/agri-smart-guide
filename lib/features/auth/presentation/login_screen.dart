@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/routes.dart';
+import '../../../shared/widgets/app_button.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -16,17 +17,18 @@ class LoginScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Prijava'),
-            TextButton(
+            AppButton(
+              text: 'Registracija',
+              variant: AppButtonVariant.secondary,
               onPressed: () {
                 Navigator.pushReplacementNamed(context, AppRoutes.register);
               },
-              child: const Text('Registracija'),
             ),
-            ElevatedButton(
+            AppButton(
+              text: 'Nastavi na početnu (demo)',
               onPressed: () {
                 Navigator.pushReplacementNamed(context, AppRoutes.home);
               },
-              child: const Text('Nastavi na početnu (demo)'),
             ),
           ],
         ),

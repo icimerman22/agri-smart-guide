@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/routes.dart';
+import '../../../shared/widgets/app_button.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -16,11 +17,12 @@ class RegisterScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Registracija'),
-            TextButton(
+            AppButton(
+              text: 'Povratak na prijavu',
+              variant: AppButtonVariant.secondary,
               onPressed: () {
                 Navigator.pushReplacementNamed(context, AppRoutes.login);
               },
-              child: const Text('Povratak na prijavu'),
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/routes.dart';
+import '../../../shared/widgets/app_button.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -15,13 +16,21 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Dobrodošli u Agri Smart Guide!'),
-            const Text('Demonstracijski početni zaslon'),
-            TextButton(
+            Text(
+              'Dobrodošli u Agri Smart Guide!',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              'Demonstracijski početni zaslon',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            AppButton(
+              text: 'Povratak na prijavu',
+              variant: AppButtonVariant.secondary,
               onPressed: () {
                 Navigator.pushReplacementNamed(context, AppRoutes.login);
               },
-              child: const Text('Povratak na prijavu'),
             ),
           ],
         ),
