@@ -21,13 +21,13 @@ class LoginScreen extends StatelessWidget {
               text: 'Registracija',
               variant: AppButtonVariant.secondary,
               onPressed: () {
-                Navigator.pushReplacementNamed(context, AppRoutes.register);
+                Navigator.pushNamed(context, AppRoutes.register);
               },
             ),
             AppButton(
               text: 'Nastavi na početnu (demo)',
               onPressed: () {
-                Navigator.pushReplacementNamed(context, AppRoutes.home);
+                Navigator.pushNamed(context, AppRoutes.home);
               },
             ),
           ],

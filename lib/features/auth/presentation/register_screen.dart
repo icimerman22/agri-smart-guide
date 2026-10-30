@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/routes.dart';
 import '../../../shared/widgets/app_button.dart';
 
 class RegisterScreen extends StatelessWidget {
@@ -21,7 +20,7 @@ class RegisterScreen extends StatelessWidget {
               text: 'Povratak na prijavu',
               variant: AppButtonVariant.secondary,
               onPressed: () {
-                Navigator.pushReplacementNamed(context, AppRoutes.login);
+                Navigator.pop(context);
               },
             ),
           ],
