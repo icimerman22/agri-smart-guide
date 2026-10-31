@@ -20,7 +20,7 @@ class RegisterScreen extends StatelessWidget {
               text: 'Povratak na prijavu',
               variant: AppButtonVariant.secondary,
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pushReplacementNamed(context, '/login');
               },
             ),
           ],

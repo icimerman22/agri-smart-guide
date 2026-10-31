@@ -4,7 +4,12 @@ import 'routes.dart';
 import 'theme/app_theme.dart';
 
 class AgriSmartGuideApp extends StatelessWidget {
-  const AgriSmartGuideApp({super.key});
+  final String initialRoute;
+
+  const AgriSmartGuideApp({
+    super.key,
+    required this.initialRoute,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +18,7 @@ class AgriSmartGuideApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       themeMode: ThemeMode.light,
-      initialRoute: AppRoutes.login,
+      initialRoute: initialRoute,
       routes: AppRoutes.routes,
     );
   }
