@@ -2,8 +2,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'app/app.dart';
+import 'app/routes.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -17,7 +19,10 @@ Future<void> main() async {
 
     debugPrint('Firebase uspješno inicijaliziran.');
 
-    runApp(const AgriSmartGuideApp());
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final initialRoute = currentUser != null ? AppRoutes.home : AppRoutes.login;
+
+    runApp(AgriSmartGuideApp(initialRoute: initialRoute));
 
   } on FirebaseException catch (e) {
     debugPrint(

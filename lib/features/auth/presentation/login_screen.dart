@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/routes.dart';
 
@@ -10,9 +11,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -21,9 +24,42 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      } on FirebaseAuthException catch (e) {
+        setState(() {
+          if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+            _errorMessage = 'Neispravna e-mail adresa ili lozinka.';
+          } else if (e.code == 'invalid-email') {
+            _errorMessage = 'Format e-mail adrese nije valjan.';
+          } else {
+            _errorMessage = 'Došlo je do pogreške: ${e.message}';
+          }
+        });
+      } catch (e) {
+        setState(() {
+          _errorMessage = 'Neočekivana pogreška. Pokušajte ponovno.';
+        });
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -43,10 +79,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'Dobrodošli natrag!',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    'Dobrodošli!',
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 24),
+
+                  if (_errorMessage != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        border: Border.all(color: Colors.red.shade200),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(color: Colors.red.shade800),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   TextFormField(
                     controller: _emailController,
@@ -92,14 +144,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: _handleLogin,
-                      child: const Text('Prijavi se', style: TextStyle(fontSize: 16)),
+                      onPressed: _isLoading ? null : _handleLogin,
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Prijavi se', style: TextStyle(fontSize: 16)),
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   TextButton(
-                    onPressed: () {
+                    onPressed: _isLoading
+                        ? null
+                        : () {
                       Navigator.pushReplacementNamed(context, AppRoutes.register);
                     },
                     child: const Text('Nemate račun? Registrirajte se'),

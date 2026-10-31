@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:agri_smart_guide/app/routes.dart';
 
 import 'package:agri_smart_guide/app/app.dart';
 
@@ -7,7 +8,8 @@ void main() {
   testWidgets('Login, registration and demo home navigation works', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const AgriSmartGuideApp());
+    await tester.pumpWidget(const AgriSmartGuideApp(initialRoute: '/login'),
+    );
 
     expect(find.text('Prijava'), findsOneWidget);
 
@@ -37,7 +39,9 @@ void main() {
   testWidgets('System back returns from registration and demo home to login', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const AgriSmartGuideApp());
+    await tester.pumpWidget(
+      const AgriSmartGuideApp(initialRoute: AppRoutes.login),
+    );
 
     final navigator = tester.state<NavigatorState>(find.byType(Navigator));
     expect(navigator.canPop(), isFalse);
