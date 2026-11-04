@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../app/routes.dart';
 import '../domain/auth_service.dart';
+import '../domain/auth_validators.dart';
 import 'auth_keys.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -115,15 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.email),
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Molimo unesite e-mail adresu.';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Unesite ispravnu e-mail adresu.';
-                      }
-                      return null;
-                    },
+                    validator: AuthValidators.email,
                   ),
                   const SizedBox(height: 16),
 

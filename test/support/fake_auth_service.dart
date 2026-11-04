@@ -9,6 +9,8 @@ class FakeAuthService implements AuthService {
   AuthException? registerError;
   AuthException? signInError;
   AuthException? signOutError;
+  Future<void>? registerGate;
+  Future<void>? signInGate;
   int registerCalls = 0;
   int signInCalls = 0;
   int signOutCalls = 0;
@@ -23,6 +25,7 @@ class FakeAuthService implements AuthService {
     registerCalls++;
     lastEmail = email;
     lastPassword = password;
+    if (registerGate != null) await registerGate;
     if (registerError != null) throw registerError!;
     currentUser = AuthUser(uid: 'test-user', email: email);
   }
@@ -32,6 +35,7 @@ class FakeAuthService implements AuthService {
     signInCalls++;
     lastEmail = email;
     lastPassword = password;
+    if (signInGate != null) await signInGate;
     if (signInError != null) throw signInError!;
     currentUser = AuthUser(uid: 'test-user', email: email);
   }
