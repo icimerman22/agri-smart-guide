@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../features/auth/domain/auth_service.dart';
 import 'routes.dart';
 import 'theme/app_theme.dart';
 
 class AgriSmartGuideApp extends StatelessWidget {
   final String initialRoute;
+  final AuthService authService;
 
   const AgriSmartGuideApp({
     super.key,
     required this.initialRoute,
+    required this.authService,
   });
 
   @override
@@ -19,7 +22,7 @@ class AgriSmartGuideApp extends StatelessWidget {
       theme: AppTheme.light,
       themeMode: ThemeMode.light,
       initialRoute: initialRoute,
-      routes: AppRoutes.routes,
+      routes: AppRoutes.routes(authService),
     );
   }
 }

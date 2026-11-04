@@ -1,14 +1,16 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
 import '../../../app/routes.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../domain/auth_error_messages.dart';
+import '../domain/auth_service.dart';
 import '../domain/auth_validators.dart';
+import 'auth_keys.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, required this.authService});
+
+  final AuthService authService;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -33,6 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
+    if (_isLoading) return;
     // Nakon prvog pokušaja polja se provjeravaju dok korisnik tipka,
     // pa poruka greške nestane čim ispravi unos.
     setState(() => _autovalidateMode = AutovalidateMode.onUserInteraction);
@@ -46,7 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       // Firebase nakon uspješne registracije korisnika odmah i prijavi.
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await widget.authService.register(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
@@ -57,9 +60,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AppRoutes.home,
         (route) => false,
       );
-    } on FirebaseAuthException catch (e) {
+    } on AuthException catch (e) {
+      if (!mounted) return;
       setState(() => _errorMessage = AuthErrorMessages.registration(e.code));
     } catch (_) {
+      if (!mounted) return;
       setState(() => _errorMessage = AuthErrorMessages.registration(''));
     } finally {
       if (mounted) {
@@ -78,9 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agri Smart Guide - Registracija'),
-      ),
+      appBar: AppBar(title: const Text('Agri Smart Guide - Registracija')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Center(
@@ -115,6 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 16),
                   ],
                   AppTextField(
+                    key: AuthKeys.registerEmail,
                     controller: _emailController,
                     labelText: 'E-mail adresa',
                     icon: Icons.email,
@@ -123,6 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
+                    key: AuthKeys.registerPassword,
                     controller: _passwordController,
                     labelText: 'Lozinka',
                     icon: Icons.lock,
@@ -131,6 +136,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
+                    key: AuthKeys.registerConfirmPassword,
                     controller: _confirmPasswordController,
                     labelText: 'Potvrda lozinke',
                     icon: Icons.lock_outline,
@@ -142,11 +148,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 24),
                   AppButton(
-                    text: _isLoading ? 'Registracija u tijeku...' : 'Registriraj se',
+                    key: AuthKeys.registerSubmit,
+                    text: _isLoading
+                        ? 'Registracija u tijeku...'
+                        : 'Registriraj se',
                     onPressed: _isLoading ? null : _handleRegister,
                   ),
                   const SizedBox(height: 16),
                   TextButton(
+                    key: AuthKeys.goToLogin,
                     onPressed: _isLoading ? null : _goToLogin,
                     child: const Text('Već imate račun? Prijavite se'),
                   ),
