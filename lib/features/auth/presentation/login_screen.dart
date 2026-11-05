@@ -1,9 +1,13 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/routes.dart';
+import '../domain/auth_service.dart';
+import '../domain/auth_validators.dart';
+import 'auth_keys.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, required this.authService});
+
+  final AuthService authService;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -25,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    if (_isLoading) return;
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -32,14 +37,15 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+        await widget.authService.signIn(
           email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+          password: _passwordController.text,
         );
 
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, AppRoutes.home);
-      } on FirebaseAuthException catch (e) {
+      } on AuthException catch (e) {
+        if (!mounted) return;
         setState(() {
           if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
             _errorMessage = 'Neispravna e-mail adresa ili lozinka.';
@@ -50,6 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         });
       } catch (e) {
+        if (!mounted) return;
         setState(() {
           _errorMessage = 'Neočekivana pogreška. Pokušajte ponovno.';
         });
@@ -101,6 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
 
                   TextFormField(
+                    key: AuthKeys.loginEmail,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
@@ -108,19 +116,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.email),
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Molimo unesite e-mail adresu.';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Unesite ispravnu e-mail adresu.';
-                      }
-                      return null;
-                    },
+                    validator: AuthValidators.email,
                   ),
                   const SizedBox(height: 16),
 
                   TextFormField(
+                    key: AuthKeys.loginPassword,
                     controller: _passwordController,
                     obscureText: true,
                     decoration: const InputDecoration(
@@ -144,6 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
+                      key: AuthKeys.loginSubmit,
                       onPressed: _isLoading ? null : _handleLogin,
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
@@ -153,6 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
 
                   TextButton(
+                    key: AuthKeys.goToRegister,
                     onPressed: _isLoading
                         ? null
                         : () {
