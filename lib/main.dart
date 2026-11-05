@@ -2,21 +2,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'app/app.dart';
+import 'app/firebase_setup.dart';
 import 'app/routes.dart';
 import 'features/auth/data/firebase_auth_service.dart';
-import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    final firebaseAuth = await initializeFirebase();
 
     debugPrint('Firebase uspješno inicijaliziran.');
 
-    final authService = FirebaseAuthService();
+    final authService = FirebaseAuthService(auth: firebaseAuth);
     final currentUser = authService.currentUser;
     final initialRoute = currentUser != null ? AppRoutes.home : AppRoutes.login;
 
