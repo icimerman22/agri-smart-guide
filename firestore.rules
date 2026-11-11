@@ -1,0 +1,305 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function owns(data) { return signedIn() && data.ownerId == request.auth.uid; }
+    function ownParcel(id) {
+      return id is string && owns(getAfter(/databases/$(database)/documents/parcels/$(id)).data);
+    }
+    function cropExists(id) {
+      return id is string && exists(/databases/$(database)/documents/crops/$(id));
+    }
+    function activePointer(parcelId, data) {
+      let id = data.get('activePlantingId', null);
+      return id == null || (id is string
+        && owns(getAfter(/databases/$(database)/documents/plantings/$(id)).data)
+        && getAfter(/databases/$(database)/documents/plantings/$(id)).data.parcelId == parcelId
+        && getAfter(/databases/$(database)/documents/plantings/$(id)).data.status == 'active');
+    }
+    function previousPlantingReleased(data) {
+      let id = data.get('activePlantingId', null);
+      return id == null || !existsAfter(/databases/$(database)/documents/plantings/$(id))
+        || getAfter(/databases/$(database)/documents/plantings/$(id)).data.status == 'completed';
+    }
+    function plantingState(id, data) {
+      let parcel = getAfter(/databases/$(database)/documents/parcels/$(data.parcelId)).data;
+      return (data.status == 'active' && parcel.get('activePlantingId', null) == id)
+        || (data.status == 'completed' && parcel.get('activePlantingId', null) != id);
+    }
+    function plantingReleased(id, parcelId) {
+      return !existsAfter(/databases/$(database)/documents/parcels/$(parcelId))
+        || getAfter(/databases/$(database)/documents/parcels/$(parcelId)).data.get('activePlantingId', null) != id;
+    }
+    function relatedEntity(data) {
+      let type = data.relatedEntityType;
+      let id = data.relatedEntityId;
+      return (type == 'crops' && cropExists(id))
+        || (type == 'users' && id == request.auth.uid && exists(/databases/$(database)/documents/users/$(id)))
+        || (type in ['parcels','plantings','tasks','soil_analyses','vegetation_records','notes','harvests','rotation_plans']
+          && owns(getAfter(/databases/$(database)/documents/$(type)/$(id)).data));
+    }
+
+    function valid_users(data) {
+      return data.keys().hasAll(['firstName', 'lastName', 'farmName', 'primaryLocation', 'unitSystem', 'notificationSettings', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['firstName', 'lastName', 'farmName', 'primaryLocation', 'unitSystem', 'notificationSettings', 'createdAt', 'updatedAt'])
+        && (data.firstName is string)
+        && (data.lastName is string)
+        && (data.farmName is string)
+        && (data.primaryLocation is map)
+        && (data.unitSystem is string)
+        && (data.notificationSettings is map)
+        && (data.createdAt is timestamp)
+        && (data.updatedAt is timestamp);
+    }
+    match /users/{id} {
+      allow read: if signedIn() && id == request.auth.uid;
+      allow create: if signedIn() && id == request.auth.uid
+        && valid_users(request.resource.data);
+      allow update: if signedIn() && id == request.auth.uid
+        && valid_users(request.resource.data);
+      allow delete: if signedIn() && id == request.auth.uid;
+    }
+
+    function valid_parcels(data) {
+      return data.keys().hasAll(['ownerId', 'name', 'areaHa', 'soilType', 'locationName', 'coordinates', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'name', 'areaHa', 'soilType', 'locationName', 'coordinates', 'activePlantingId', 'createdAt', 'updatedAt'])
+        && (data.ownerId is string)
+        && (data.name is string)
+        && (data.areaHa is number)
+        && (data.soilType is string)
+        && (data.locationName is string)
+        && (data.coordinates is latlng)
+        && (data.get('activePlantingId', null) == null || (data.activePlantingId is string))
+        && (data.createdAt is timestamp)
+        && (data.updatedAt is timestamp);
+    }
+    match /parcels/{id} {
+      allow read: if owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && valid_parcels(request.resource.data)
+        && activePointer(id, request.resource.data);
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && valid_parcels(request.resource.data)
+        && activePointer(id, request.resource.data)
+        && (resource.data.get('activePlantingId', null) == request.resource.data.get('activePlantingId', null)
+          || previousPlantingReleased(resource.data));
+      allow delete: if owns(resource.data);
+    }
+
+    match /crops/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    function valid_plantings(data) {
+      return data.keys().hasAll(['ownerId', 'parcelId', 'cropId', 'plantedAt', 'expectedHarvestAt', 'stage', 'status', 'seasonYear', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'parcelId', 'cropId', 'plantedAt', 'expectedHarvestAt', 'stage', 'status', 'seasonYear', 'createdAt', 'updatedAt'])
+        && (data.ownerId is string)
+        && (data.parcelId is string)
+        && (data.cropId is string)
+        && (data.plantedAt is timestamp)
+        && (data.expectedHarvestAt is timestamp)
+        && (data.stage is string)
+        && (data.status is string)
+        && (data.seasonYear is int)
+        && (data.createdAt is timestamp)
+        && (data.updatedAt is timestamp);
+    }
+    match /plantings/{id} {
+      allow read: if owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && valid_plantings(request.resource.data)
+        && ownParcel(request.resource.data.parcelId)
+        && cropExists(request.resource.data.cropId)
+        && plantingState(id, request.resource.data);
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && valid_plantings(request.resource.data)
+        && ownParcel(request.resource.data.parcelId)
+        && cropExists(request.resource.data.cropId)
+        && plantingState(id, request.resource.data)
+        && request.resource.data.parcelId == resource.data.parcelId;
+      allow delete: if owns(resource.data) && plantingReleased(id, resource.data.parcelId);
+    }
+
+    function valid_tasks(data) {
+      return data.keys().hasAll(['ownerId', 'title', 'description', 'type', 'dueAt', 'priority', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'parcelId', 'title', 'description', 'type', 'dueAt', 'priority', 'status', 'completedAt', 'costCents', 'costCategory', 'createdAt', 'updatedAt'])
+        && (data.ownerId is string)
+        && (data.get('parcelId', null) == null || (data.parcelId is string))
+        && (data.title is string)
+        && (data.description is string)
+        && (data.type is string)
+        && (data.dueAt is timestamp)
+        && (data.priority is string)
+        && (data.status is string)
+        && (data.get('completedAt', null) == null || (data.completedAt is timestamp))
+        && (data.get('costCents', null) == null || (data.costCents is int))
+        && (data.get('costCategory', null) == null || (data.costCategory is string))
+        && (data.createdAt is timestamp)
+        && (data.updatedAt is timestamp);
+    }
+    match /tasks/{id} {
+      allow read: if owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && valid_tasks(request.resource.data)
+        && (request.resource.data.get('parcelId', null) == null || ownParcel(request.resource.data.parcelId));
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && valid_tasks(request.resource.data)
+        && (request.resource.data.get('parcelId', null) == null || ownParcel(request.resource.data.parcelId));
+      allow delete: if owns(resource.data);
+    }
+
+    function valid_soil_analyses(data) {
+      return data.keys().hasAll(['ownerId', 'parcelId', 'sampledAt', 'ph', 'humusPercent', 'nitrogenPercent', 'phosphorusMgPer100g', 'potassiumMgPer100g', 'createdAt'])
+        && data.keys().hasOnly(['ownerId', 'parcelId', 'sampledAt', 'ph', 'humusPercent', 'nitrogenPercent', 'phosphorusMgPer100g', 'potassiumMgPer100g', 'moisturePercent', 'createdAt'])
+        && (data.ownerId is string)
+        && (data.parcelId is string)
+        && (data.sampledAt is timestamp)
+        && (data.ph is number)
+        && (data.humusPercent is number)
+        && (data.nitrogenPercent is number)
+        && (data.phosphorusMgPer100g is number)
+        && (data.potassiumMgPer100g is number)
+        && (data.get('moisturePercent', null) == null || (data.moisturePercent is number))
+        && (data.createdAt is timestamp);
+    }
+    match /soil_analyses/{id} {
+      allow read: if owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && valid_soil_analyses(request.resource.data)
+        && ownParcel(request.resource.data.parcelId);
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && valid_soil_analyses(request.resource.data)
+        && ownParcel(request.resource.data.parcelId);
+      allow delete: if owns(resource.data);
+    }
+
+    function valid_vegetation_records(data) {
+      return data.keys().hasAll(['ownerId', 'parcelId', 'measuredAt', 'ndvi', 'healthStatus', 'summary', 'isDemo'])
+        && data.keys().hasOnly(['ownerId', 'parcelId', 'measuredAt', 'ndvi', 'healthStatus', 'summary', 'visualizationAssetPath', 'isDemo'])
+        && (data.ownerId is string)
+        && (data.parcelId is string)
+        && (data.measuredAt is timestamp)
+        && (data.ndvi is number)
+        && (data.healthStatus is string)
+        && (data.summary is string)
+        && (data.get('visualizationAssetPath', null) == null || (data.visualizationAssetPath is string))
+        && (data.isDemo is bool);
+    }
+    match /vegetation_records/{id} {
+      allow read: if owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && valid_vegetation_records(request.resource.data)
+        && ownParcel(request.resource.data.parcelId);
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && valid_vegetation_records(request.resource.data)
+        && ownParcel(request.resource.data.parcelId);
+      allow delete: if owns(resource.data);
+    }
+
+    function valid_notes(data) {
+      return data.keys().hasAll(['ownerId', 'title', 'content', 'photoPaths', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'parcelId', 'title', 'content', 'photoPaths', 'createdAt', 'updatedAt'])
+        && (data.ownerId is string)
+        && (data.get('parcelId', null) == null || (data.parcelId is string))
+        && (data.title is string)
+        && (data.content is string)
+        && (data.photoPaths is list)
+        && (data.createdAt is timestamp)
+        && (data.updatedAt is timestamp);
+    }
+    match /notes/{id} {
+      allow read: if owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && valid_notes(request.resource.data)
+        && (request.resource.data.get('parcelId', null) == null || ownParcel(request.resource.data.parcelId));
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && valid_notes(request.resource.data)
+        && (request.resource.data.get('parcelId', null) == null || ownParcel(request.resource.data.parcelId));
+      allow delete: if owns(resource.data);
+    }
+
+    function valid_harvests(data) {
+      return data.keys().hasAll(['ownerId', 'parcelId', 'plantingId', 'harvestedAt', 'quantityKg', 'areaHaAtHarvest', 'note', 'createdAt'])
+        && data.keys().hasOnly(['ownerId', 'parcelId', 'plantingId', 'harvestedAt', 'quantityKg', 'areaHaAtHarvest', 'note', 'createdAt'])
+        && (data.ownerId is string)
+        && (data.parcelId is string)
+        && (data.plantingId is string)
+        && (data.harvestedAt is timestamp)
+        && (data.quantityKg is number)
+        && (data.areaHaAtHarvest is number)
+        && (data.note is string)
+        && (data.createdAt is timestamp);
+    }
+    match /harvests/{id} {
+      allow read: if owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && valid_harvests(request.resource.data)
+        && ownParcel(request.resource.data.parcelId)
+        && owns(getAfter(/databases/$(database)/documents/plantings/$(request.resource.data.plantingId)).data)
+        && getAfter(/databases/$(database)/documents/plantings/$(request.resource.data.plantingId)).data.parcelId == request.resource.data.parcelId;
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && valid_harvests(request.resource.data)
+        && ownParcel(request.resource.data.parcelId)
+        && owns(getAfter(/databases/$(database)/documents/plantings/$(request.resource.data.plantingId)).data)
+        && getAfter(/databases/$(database)/documents/plantings/$(request.resource.data.plantingId)).data.parcelId == request.resource.data.parcelId;
+      allow delete: if owns(resource.data);
+    }
+
+    function valid_notifications(data) {
+      return data.keys().hasAll(['ownerId', 'type', 'title', 'body', 'relatedEntityType', 'relatedEntityId', 'createdAt'])
+        && data.keys().hasOnly(['ownerId', 'type', 'title', 'body', 'relatedEntityType', 'relatedEntityId', 'createdAt', 'readAt'])
+        && (data.ownerId is string)
+        && (data.type is string)
+        && (data.title is string)
+        && (data.body is string)
+        && (data.relatedEntityType is string)
+        && (data.relatedEntityId is string)
+        && (data.createdAt is timestamp)
+        && (data.get('readAt', null) == null || (data.readAt is timestamp));
+    }
+    match /notifications/{id} {
+      allow read: if owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && valid_notifications(request.resource.data)
+        && relatedEntity(request.resource.data);
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && valid_notifications(request.resource.data)
+        // Reading a historical notification must not require its target to remain.
+        && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt'])
+          || relatedEntity(request.resource.data));
+      allow delete: if owns(resource.data);
+    }
+
+    function valid_rotation_plans(data) {
+      return data.keys().hasAll(['ownerId', 'parcelId', 'seasonYear', 'cropId', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'parcelId', 'seasonYear', 'cropId', 'createdAt', 'updatedAt'])
+        && (data.ownerId is string)
+        && (data.parcelId is string)
+        && (data.seasonYear is int)
+        && (data.cropId is string)
+        && (data.createdAt is timestamp)
+        && (data.updatedAt is timestamp);
+    }
+    match /rotation_plans/{id} {
+      allow read: if owns(resource.data);
+      allow create: if owns(request.resource.data)
+        && valid_rotation_plans(request.resource.data)
+        && ownParcel(request.resource.data.parcelId)
+        && cropExists(request.resource.data.cropId)
+        && id == request.resource.data.parcelId + '_' + string(request.resource.data.seasonYear);
+      allow update: if owns(resource.data) && owns(request.resource.data)
+        && valid_rotation_plans(request.resource.data)
+        && ownParcel(request.resource.data.parcelId)
+        && cropExists(request.resource.data.cropId)
+        && id == request.resource.data.parcelId + '_' + string(request.resource.data.seasonYear)
+        && request.resource.data.parcelId == resource.data.parcelId
+        && request.resource.data.seasonYear == resource.data.seasonYear;
+      allow delete: if owns(resource.data);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
