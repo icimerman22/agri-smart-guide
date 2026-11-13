@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore;
 import 'package:firebase_core/firebase_core.dart';
 import 'app/app.dart';
 import 'app/firebase_setup.dart';
 import 'app/routes.dart';
 import 'features/auth/data/firebase_auth_service.dart';
+import 'features/profile/data/firestore_profile_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,11 +17,18 @@ Future<void> main() async {
     debugPrint('Firebase uspješno inicijaliziran.');
 
     final authService = FirebaseAuthService(auth: firebaseAuth);
+    final profileRepository = FirestoreProfileRepository(
+      firestore: FirebaseFirestore.instanceFor(app: firebaseAuth.app),
+    );
     final currentUser = authService.currentUser;
     final initialRoute = currentUser != null ? AppRoutes.home : AppRoutes.login;
 
     runApp(
-      AgriSmartGuideApp(initialRoute: initialRoute, authService: authService),
+      AgriSmartGuideApp(
+        initialRoute: initialRoute,
+        authService: authService,
+        profileRepository: profileRepository,
+      ),
     );
   } on FirebaseException catch (e) {
     debugPrint('Firebase initialization error: ${e.code} - ${e.message}');

@@ -1,0 +1,20 @@
+import 'package:flutter/foundation.dart';
+
+abstract final class ProfileKeys {
+  static const openProfile = ValueKey('openProfile');
+  static const openSettings = ValueKey('openSettings');
+  static const loading = ValueKey('profileLoading');
+  static const error = ValueKey('profileError');
+  static const retry = ValueKey('profileRetry');
+  static const header = ValueKey('profileHeader');
+  static const firstName = ValueKey('profileFirstName');
+  static const lastName = ValueKey('profileLastName');
+  static const email = ValueKey('profileEmail');
+  static const farmName = ValueKey('profileFarmName');
+  static const save = ValueKey('profileSave');
+  static const currentPassword = ValueKey('profileCurrentPassword');
+  static const newPassword = ValueKey('profileNewPassword');
+  static const confirmNewPassword = ValueKey('profileConfirmNewPassword');
+  static const changePassword = ValueKey('profileChangePassword');
+  static const location = ValueKey('profileLocation');
+}
