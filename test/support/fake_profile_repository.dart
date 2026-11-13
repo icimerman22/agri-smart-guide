@@ -5,11 +5,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FakeProfileRepository implements ProfileRepository {
   final Map<String, UserProfile> profiles = {};
 
-  @override
-  Future<UserProfile> loadProfile(String uid) async =>
-      profiles[uid] ?? defaultUserProfile(uid, Timestamp(0, 0));
+  ProfileException? loadError;
+  ProfileException? saveError;
+  int loadCalls = 0;
+  int saveCalls = 0;
 
   @override
-  Future<UserProfile> saveProfile(UserProfile profile) async =>
-      profiles[profile.id] = profile;
+  Future<UserProfile> loadProfile(String uid) async {
+    loadCalls++;
+    if (loadError != null) throw loadError!;
+    return profiles[uid] ?? defaultUserProfile(uid, Timestamp(0, 0));
+  }
+
+  @override
+  Future<UserProfile> saveProfile(UserProfile profile) async {
+    saveCalls++;
+    if (saveError != null) throw saveError!;
+    return profiles[profile.id] = profile;
+  }
 }
