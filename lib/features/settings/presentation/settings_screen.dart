@@ -5,6 +5,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../../auth/domain/auth_service.dart';
 import '../../profile/domain/farm_location.dart';
 import '../../profile/domain/profile_repository.dart';
+import '../../profile/domain/settings_defaults.dart';
 import '../../profile/presentation/location_picker.dart';
 import 'settings_keys.dart';
 
@@ -119,7 +120,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final profile = _profile!;
     _save(
       profile.copyWith(
-        notificationSettings: {...profile.notificationSettings, type: enabled},
+        notificationSettings: {
+          ...SettingsDefaults.completeNotifications(
+            profile.notificationSettings,
+          ),
+          type: enabled,
+        },
       ),
     );
   }
@@ -170,7 +176,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final textTheme = Theme.of(context).textTheme;
     final unitSystem = unitSystems.containsKey(profile.unitSystem)
         ? profile.unitSystem
-        : 'metric';
+        : SettingsDefaults.unitSystem;
 
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -184,7 +190,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             key: SettingsKeys.notification(entry.key),
             contentPadding: const EdgeInsets.symmetric(horizontal: 24),
             title: Text(entry.value),
-            value: profile.notificationSettings[entry.key] == true,
+            value: SettingsDefaults.isNotificationEnabled(
+              profile.notificationSettings,
+              entry.key,
+            ),
             onChanged: _isSaving
                 ? null
                 : (enabled) => _setNotification(entry.key, enabled),

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../shared/models/user_profile.dart';
+import 'settings_defaults.dart';
 
 /// Access to the user profile document (`users/{uid}`).
 ///
@@ -32,8 +33,8 @@ UserProfile defaultUserProfile(String uid, Timestamp now) => UserProfile(
   lastName: '',
   farmName: '',
   primaryLocation: const {},
-  unitSystem: 'metric',
-  notificationSettings: const {},
+  unitSystem: SettingsDefaults.unitSystem,
+  notificationSettings: SettingsDefaults.notifications,
   createdAt: now,
   updatedAt: now,
 );
