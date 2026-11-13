@@ -7,6 +7,7 @@ import '../../../shared/widgets/app_text_field.dart';
 import '../../auth/domain/auth_service.dart';
 import '../domain/profile_repository.dart';
 import '../domain/profile_validators.dart';
+import 'change_password_section.dart';
 import 'profile_keys.dart';
 
 /// S05 Profile: shows the signed-in user's personal data.
@@ -240,6 +241,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 32),
+        ChangePasswordSection(authService: widget.authService),
       ],
     );
   }

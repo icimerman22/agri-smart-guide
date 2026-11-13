@@ -11,4 +11,8 @@ abstract final class ProfileKeys {
   static const email = ValueKey('profileEmail');
   static const farmName = ValueKey('profileFarmName');
   static const save = ValueKey('profileSave');
+  static const currentPassword = ValueKey('profileCurrentPassword');
+  static const newPassword = ValueKey('profileNewPassword');
+  static const confirmNewPassword = ValueKey('profileConfirmNewPassword');
+  static const changePassword = ValueKey('profileChangePassword');
 }

@@ -37,6 +37,27 @@ class FirebaseAuthService implements AuthService {
   @override
   Future<void> signOut() => _translateErrors(_auth.signOut);
 
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) {
+      throw const AuthException('no-current-user');
+    }
+
+    await _translateErrors(() async {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+    });
+  }
+
   Future<void> _translateErrors(Future<void> Function() action) async {
     try {
       await action();
