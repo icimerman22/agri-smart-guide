@@ -6,6 +6,7 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../auth/domain/auth_service.dart';
 import '../domain/profile_repository.dart';
+import '../domain/profile_validators.dart';
 import 'profile_keys.dart';
 
 /// S05 Profile: shows the signed-in user's personal data.
@@ -24,6 +25,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -31,6 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   UserProfile? _profile;
   bool _isLoading = true;
+  bool _isSaving = false;
   String? _errorMessage;
 
   @override
@@ -80,6 +83,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = false;
         _errorMessage = 'Profil nije moguće učitati. Provjerite vezu.';
       });
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final profile = _profile;
+    if (_isSaving || profile == null) return;
+
+    FocusScope.of(context).unfocus();
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSaving = true);
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      final saved = await widget.profileRepository.saveProfile(
+        profile.copyWith(
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          farmName: _farmNameController.text.trim(),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _profile = saved;
+        _isSaving = false;
+      });
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Promjene su uspješno spremljene.')),
+      );
+    } on ProfileException {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Promjene nije moguće spremiti. Pokušajte ponovno.'),
+        ),
+      );
     }
   }
 
@@ -154,34 +194,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        Text('Osobni podaci', style: textTheme.titleMedium),
-        const SizedBox(height: 12),
-        AppTextField(
-          key: ProfileKeys.firstName,
-          labelText: 'Ime',
-          controller: _firstNameController,
-          enabled: false,
-        ),
-        const SizedBox(height: 12),
-        AppTextField(
-          key: ProfileKeys.lastName,
-          labelText: 'Prezime',
-          controller: _lastNameController,
-          enabled: false,
-        ),
-        const SizedBox(height: 12),
-        AppTextField(
-          key: ProfileKeys.email,
-          labelText: 'E-mail (nije moguće mijenjati)',
-          controller: _emailController,
-          enabled: false,
-        ),
-        const SizedBox(height: 12),
-        AppTextField(
-          key: ProfileKeys.farmName,
-          labelText: 'Naziv gospodarstva (OPG)',
-          controller: _farmNameController,
-          enabled: false,
+        Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Osobni podaci', style: textTheme.titleMedium),
+              const SizedBox(height: 12),
+              AppTextField(
+                key: ProfileKeys.firstName,
+                labelText: 'Ime',
+                controller: _firstNameController,
+                validator: ProfileValidators.firstName,
+                enabled: !_isSaving,
+              ),
+              const SizedBox(height: 12),
+              AppTextField(
+                key: ProfileKeys.lastName,
+                labelText: 'Prezime',
+                controller: _lastNameController,
+                validator: ProfileValidators.lastName,
+                enabled: !_isSaving,
+              ),
+              const SizedBox(height: 12),
+              AppTextField(
+                key: ProfileKeys.email,
+                labelText: 'E-mail (nije moguće mijenjati)',
+                controller: _emailController,
+                enabled: false,
+              ),
+              const SizedBox(height: 12),
+              AppTextField(
+                key: ProfileKeys.farmName,
+                labelText: 'Naziv gospodarstva (OPG)',
+                controller: _farmNameController,
+                validator: ProfileValidators.farmName,
+                enabled: !_isSaving,
+              ),
+              const SizedBox(height: 20),
+              AppButton(
+                key: ProfileKeys.save,
+                text: _isSaving ? 'Spremanje...' : 'Spremi promjene',
+                onPressed: _isSaving ? null : _saveProfile,
+              ),
+            ],
+          ),
         ),
       ],
     );

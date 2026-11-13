@@ -10,4 +10,5 @@ abstract final class ProfileKeys {
   static const lastName = ValueKey('profileLastName');
   static const email = ValueKey('profileEmail');
   static const farmName = ValueKey('profileFarmName');
+  static const save = ValueKey('profileSave');
 }
