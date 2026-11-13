@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/routes.dart';
 import '../../../shared/models/user_profile.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../auth/domain/auth_service.dart';
@@ -44,6 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   UserProfile? _profile;
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isLoggingOut = false;
   String? _errorMessage;
 
   @override
@@ -128,6 +130,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
         },
       ),
     );
+  }
+
+  /// Signs out and clears the navigation stack so the user cannot go back
+  /// to protected screens.
+  Future<void> _logout() async {
+    setState(() => _isLoggingOut = true);
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      await widget.authService.signOut();
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.login,
+        (route) => false,
+      );
+    } on AuthException {
+      if (!mounted) return;
+      setState(() => _isLoggingOut = false);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Odjava nije uspjela. Pokušajte ponovno.'),
+        ),
+      );
+    }
   }
 
   @override
@@ -242,6 +269,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+        const Divider(height: 32),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: AppButton(
+            key: SettingsKeys.logout,
+            text: _isLoggingOut ? 'Odjava...' : 'Odjava',
+            icon: Icons.logout,
+            variant: AppButtonVariant.secondary,
+            onPressed: _isLoggingOut ? null : _logout,
           ),
         ),
       ],

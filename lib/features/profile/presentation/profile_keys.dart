@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 abstract final class ProfileKeys {
   static const openProfile = ValueKey('openProfile');
+  static const openSettings = ValueKey('openSettings');
   static const loading = ValueKey('profileLoading');
   static const error = ValueKey('profileError');
   static const retry = ValueKey('profileRetry');
