@@ -15,4 +15,5 @@ abstract final class ProfileKeys {
   static const newPassword = ValueKey('profileNewPassword');
   static const confirmNewPassword = ValueKey('profileConfirmNewPassword');
   static const changePassword = ValueKey('profileChangePassword');
+  static const location = ValueKey('profileLocation');
 }
