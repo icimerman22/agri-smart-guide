@@ -36,4 +36,42 @@ void main() {
       );
     });
   });
+
+  group('AuthErrorMessages.passwordChange', () {
+    test('javlja da trenutna lozinka nije ispravna', () {
+      for (final code in ['wrong-password', 'invalid-credential']) {
+        expect(
+          AuthErrorMessages.passwordChange(code),
+          'Trenutna lozinka nije ispravna.',
+          reason: code,
+        );
+      }
+    });
+
+    test('ima poruke za ostale poznate greške', () {
+      expect(
+        AuthErrorMessages.passwordChange('weak-password'),
+        'Nova lozinka je preslaba. Odaberite jaču lozinku.',
+      );
+      expect(
+        AuthErrorMessages.passwordChange('requires-recent-login'),
+        'Iz sigurnosnih razloga ponovno se prijavite pa pokušajte opet.',
+      );
+      expect(
+        AuthErrorMessages.passwordChange('no-current-user'),
+        'Niste prijavljeni.',
+      );
+      expect(
+        AuthErrorMessages.passwordChange('network-request-failed'),
+        'Nema internetske veze. Provjerite vezu i pokušajte ponovno.',
+      );
+    });
+
+    test('za nepoznat kod vraća općenitu poruku', () {
+      expect(
+        AuthErrorMessages.passwordChange('nesto-neocekivano'),
+        'Lozinku nije moguće promijeniti. Pokušajte ponovno.',
+      );
+    });
+  });
 }
