@@ -3,6 +3,7 @@ import '../../../app/routes.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../auth/domain/auth_service.dart';
 import '../../auth/presentation/auth_keys.dart';
+import '../../profile/presentation/profile_keys.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.authService});
@@ -36,6 +37,12 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Agri Smart Guide'),
         actions: [
+          IconButton(
+            key: ProfileKeys.openProfile,
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Profil',
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
+          ),
           IconButton(
             key: AuthKeys.logoutIcon,
             icon: const Icon(Icons.logout),

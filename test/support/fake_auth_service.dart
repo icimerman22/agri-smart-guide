@@ -40,6 +40,22 @@ class FakeAuthService implements AuthService {
     currentUser = AuthUser(uid: 'test-user', email: email);
   }
 
+  AuthException? changePasswordError;
+  int changePasswordCalls = 0;
+  String? lastCurrentPassword;
+  String? lastNewPassword;
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    changePasswordCalls++;
+    lastCurrentPassword = currentPassword;
+    lastNewPassword = newPassword;
+    if (changePasswordError != null) throw changePasswordError!;
+  }
+
   @override
   Future<void> signOut() async {
     signOutCalls++;
