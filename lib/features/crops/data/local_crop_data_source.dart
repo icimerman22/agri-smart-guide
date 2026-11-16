@@ -13,7 +13,7 @@ class LocalCropDataSource {
 
   Future<List<CropModel>> loadCrops() async {
     final jsonString = await _bundle.loadString(
-      'assets/data/crops.json',
+      'assets/data/crop.json',
     );
 
     final decoded = jsonDecode(jsonString);
