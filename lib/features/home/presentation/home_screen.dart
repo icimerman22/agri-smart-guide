@@ -4,6 +4,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../../auth/domain/auth_service.dart';
 import '../../auth/presentation/auth_keys.dart';
 import '../../profile/presentation/profile_keys.dart';
+import '../../crops/presentation/crop_catalog_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.authService});
@@ -27,6 +28,14 @@ class HomeScreen extends StatelessWidget {
         context,
       ).showSnackBar(SnackBar(content: Text('Greška prilikom odjave: $e')));
     }
+  }
+
+  void _openCropCatalog(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const CropCatalogScreen(),
+      ),
+    );
   }
 
   @override
@@ -74,6 +83,13 @@ class HomeScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
+              AppButton(
+                text: 'Katalog kultura',
+                onPressed: () => _openCropCatalog(context),
+              ),
+
+              const SizedBox(height: 12),
+
               AppButton(
                 key: AuthKeys.logout,
                 text: 'Odjavi se',
