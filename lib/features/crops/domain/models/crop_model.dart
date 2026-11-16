@@ -1,4 +1,3 @@
-
 class CropModel {
   final String id;
   final String name;
