@@ -1,0 +1,53 @@
+
+[
+  {
+    "id": "tomato",
+    "name": "Rajčica",
+    "description": "Povrtna kultura čiji se plodovi koriste u prehrani.",
+    "plantingPeriod": "Proljeće, nakon prestanka opasnosti od mraza",
+    "growingConditions": "Sunčan položaj, plodno i dobro drenirano tlo",
+    "growingDurationDays": 90,
+    "waterNeeds": "Redovito zalijevanje",
+    "imagePath": null
+  },
+  {
+    "id": "pepper",
+    "name": "Paprika",
+    "description": "Toploljubiva povrtna kultura različitih oblika i boja plodova.",
+    "plantingPeriod": "Proljeće, nakon zatopljenja",
+    "growingConditions": "Topao i sunčan položaj, hranjivo tlo",
+    "growingDurationDays": 100,
+    "waterNeeds": "Redovito zalijevanje",
+    "imagePath": null
+  },
+  {
+    "id": "potato",
+    "name": "Krumpir",
+    "description": "Kultura koja se uzgaja radi jestivih gomolja.",
+    "plantingPeriod": "Proljeće",
+    "growingConditions": "Rahlo, dobro drenirano tlo",
+    "growingDurationDays": 100,
+    "waterNeeds": "Umjerene potrebe za vodom",
+    "imagePath": null
+  },
+  {
+    "id": "carrot",
+    "name": "Mrkva",
+    "description": "Korjenasto povrće poznato po jestivom korijenu.",
+    "plantingPeriod": "Proljeće ili kasno ljeto",
+    "growingConditions": "Duboko, rahlo tlo bez većih prepreka",
+    "growingDurationDays": 90,
+    "waterNeeds": "Ravnomjerna vlažnost tla",
+    "imagePath": null
+  },
+  {
+    "id": "lettuce",
+    "name": "Salata",
+    "description": "Lisnata povrtna kultura za svježu potrošnju.",
+    "plantingPeriod": "Proljeće i jesen",
+    "growingConditions": "Hranjivo tlo i umjerene temperature",
+    "growingDurationDays": 50,
+    "waterNeeds": "Redovito održavanje vlažnosti tla",
+    "imagePath": null
+  }
+]
