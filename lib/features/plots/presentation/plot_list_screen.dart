@@ -3,6 +3,7 @@ import '../../auth/domain/auth_service.dart';
 import '../data/plot_repository.dart';
 import '../domain/plot_model.dart';
 import 'plot_detail_screen.dart';
+import 'plot_form_screen.dart';
 
 class PlotListScreen extends StatelessWidget {
   const PlotListScreen({
@@ -52,6 +53,22 @@ class PlotListScreen extends StatelessWidget {
                     'Nemate još dodanih parcela.',
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PlotFormScreen(
+                            authService: authService,
+                            plotRepository: plotRepository,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Dodaj prvu parcelu'),
+                  ),
                 ],
               ),
             );
@@ -80,7 +97,11 @@ class PlotListScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PlotDetailScreen(plot: plot),
+                        builder: (context) => PlotDetailScreen(
+                          plot: plot,
+                          authService: authService,
+                          plotRepository: plotRepository,
+                        ),
                       ),
                     );
                   },
@@ -89,6 +110,21 @@ class PlotListScreen extends StatelessWidget {
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PlotFormScreen(
+                authService: authService,
+                plotRepository: plotRepository,
+              ),
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
+        tooltip: 'Dodaj parcelu',
       ),
     );
   }
