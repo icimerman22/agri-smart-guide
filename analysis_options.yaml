@@ -13,6 +13,8 @@ analyzer:
     - android/**
     - ios/**
     - test/firestore_rules/node_modules/**
+    - macos/**
+    - linux/**
 include: package:flutter_lints/flutter.yaml
 
 linter:
