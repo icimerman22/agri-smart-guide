@@ -1,0 +1,64 @@
+{
+  "crops": {
+    "tomato": {
+      "name": "Rajčica",
+      "category": "povrće",
+      "description": "Povrtna kultura čiji se plodovi koriste u prehrani.",
+      "sowingMonths": [4, 5],
+      "growthDays": 90,
+      "waterRequirement": "Redovito zalijevanje",
+      "rowSpacingCm": 100,
+      "plantSpacingCm": 50,
+      "optimalPhMin": 6.0,
+      "optimalPhMax": 6.8
+    },
+    "pepper": {
+      "name": "Paprika",
+      "category": "povrće",
+      "description": "Toploljubiva povrtna kultura različitih oblika i boja plodova.",
+      "sowingMonths": [4, 5],
+      "growthDays": 100,
+      "waterRequirement": "Redovito zalijevanje",
+      "rowSpacingCm": 60,
+      "plantSpacingCm": 40,
+      "optimalPhMin": 6.0,
+      "optimalPhMax": 6.8
+    },
+    "potato": {
+      "name": "Krumpir",
+      "category": "gomoljasto povrće",
+      "description": "Kultura koja se uzgaja radi jestivih gomolja.",
+      "sowingMonths": [3, 4],
+      "growthDays": 100,
+      "waterRequirement": "Umjerene potrebe za vodom",
+      "rowSpacingCm": 70,
+      "plantSpacingCm": 30,
+      "optimalPhMin": 5.0,
+      "optimalPhMax": 6.5
+    },
+    "carrot": {
+      "name": "Mrkva",
+      "category": "korjenasto povrće",
+      "description": "Korjenasto povrće poznato po jestivom korijenu.",
+      "sowingMonths": [3, 4, 7, 8],
+      "growthDays": 90,
+      "waterRequirement": "Ravnomjerna vlažnost tla",
+      "rowSpacingCm": 30,
+      "plantSpacingCm": 5,
+      "optimalPhMin": 6.0,
+      "optimalPhMax": 6.8
+    },
+    "lettuce": {
+      "name": "Salata",
+      "category": "lisnato povrće",
+      "description": "Lisnata povrtna kultura za svježu potrošnju.",
+      "sowingMonths": [3, 4, 8, 9],
+      "growthDays": 50,
+      "waterRequirement": "Redovito održavanje vlažnosti tla",
+      "rowSpacingCm": 30,
+      "plantSpacingCm": 25,
+      "optimalPhMin": 6.0,
+      "optimalPhMax": 7.0
+    }
+  }
+}
