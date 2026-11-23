@@ -9,6 +9,7 @@ import '../../crops/data/local_crop_data_source.dart';
 import '../../plantings/data/firestore_planting_repository.dart';
 import '../../plantings/presentation/planting_form_screen.dart';
 import '../../plantings/presentation/planting_keys.dart';
+import '../../plantings/presentation/planting_list_screen.dart';
 import '../../plots/data/plot_repository.dart';
 import '../../plots/presentation/plot_list_screen.dart';
 
@@ -59,6 +60,19 @@ class HomeScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PlantingFormScreen(
+          authService: authService,
+          plotRepository: PlotRepository(),
+          plantingRepository: FirestorePlantingRepository(),
+          cropDataSource: LocalCropDataSource(),
+        ),
+      ),
+    );
+  }
+
+  void _openPlantingList(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PlantingListScreen(
           authService: authService,
           plotRepository: PlotRepository(),
           plantingRepository: FirestorePlantingRepository(),
@@ -132,6 +146,14 @@ class HomeScreen extends StatelessWidget {
                 key: PlantingKeys.openPlantingForm,
                 text: 'Evidentiraj sadnju',
                 onPressed: () => _openPlantingForm(context),
+              ),
+
+              const SizedBox(height: 12),
+
+              AppButton(
+                key: PlantingKeys.openPlantingList,
+                text: 'Moje sadnje',
+                onPressed: () => _openPlantingList(context),
               ),
 
               const SizedBox(height: 12),
