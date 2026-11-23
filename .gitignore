@@ -32,6 +32,9 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+node_modules/
+firebase-debug.log
+firestore-debug.log
 
 # Symbolication related
 app.*.symbols
@@ -43,3 +46,5 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+tool/.secrets/

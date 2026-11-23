@@ -1,4 +1,3 @@
-import com.android.build.api.dsl.ApplicationExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -11,7 +10,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-extensions.configure<ApplicationExtension> {
+android {
     namespace = "com.getasoftware.agri_smart_guide"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion

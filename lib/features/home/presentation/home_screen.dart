@@ -3,6 +3,14 @@ import '../../../app/routes.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../auth/domain/auth_service.dart';
 import '../../auth/presentation/auth_keys.dart';
+import '../../profile/presentation/profile_keys.dart';
+import '../../crops/presentation/crop_catalog_screen.dart';
+import '../../crops/data/local_crop_data_source.dart';
+import '../../plantings/data/firestore_planting_repository.dart';
+import '../../plantings/presentation/planting_keys.dart';
+import '../../plantings/presentation/planting_list_screen.dart';
+import '../../plots/data/plot_repository.dart';
+import '../../plots/presentation/plot_list_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.authService});
@@ -18,7 +26,7 @@ class HomeScreen extends StatelessWidget {
       Navigator.pushNamedAndRemoveUntil(
         context,
         AppRoutes.login,
-        (route) => false,
+            (route) => false,
       );
     } catch (e) {
       if (!context.mounted) return;
@@ -26,6 +34,38 @@ class HomeScreen extends StatelessWidget {
         context,
       ).showSnackBar(SnackBar(content: Text('Greška prilikom odjave: $e')));
     }
+  }
+
+  void _openCropCatalog(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const CropCatalogScreen(),
+      ),
+    );
+  }
+
+  void _openPlotList(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PlotListScreen(
+          authService: authService,
+          plotRepository: PlotRepository(),
+        ),
+      ),
+    );
+  }
+
+  void _openPlantingList(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PlantingListScreen(
+          authService: authService,
+          plotRepository: PlotRepository(),
+          plantingRepository: FirestorePlantingRepository(),
+          cropDataSource: LocalCropDataSource(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -36,6 +76,12 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Agri Smart Guide'),
         actions: [
+          IconButton(
+            key: ProfileKeys.openProfile,
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Profil',
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
+          ),
           IconButton(
             key: AuthKeys.logoutIcon,
             icon: const Icon(Icons.logout),
@@ -67,6 +113,29 @@ class HomeScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
+
+              AppButton(
+                text: 'Katalog kultura',
+                onPressed: () => _openCropCatalog(context),
+              ),
+
+              const SizedBox(height: 12),
+
+              AppButton(
+                text: 'Moje parcele',
+                onPressed: () => _openPlotList(context),
+              ),
+
+              const SizedBox(height: 12),
+
+              AppButton(
+                key: PlantingKeys.openPlantingList,
+                text: 'Moje sadnje',
+                onPressed: () => _openPlantingList(context),
+              ),
+
+              const SizedBox(height: 12),
+
               AppButton(
                 key: AuthKeys.logout,
                 text: 'Odjavi se',

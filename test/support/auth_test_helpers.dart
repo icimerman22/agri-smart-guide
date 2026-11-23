@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_auth_service.dart';
+import 'fake_profile_repository.dart';
 
 Future<void> pumpAuthApp(
   WidgetTester tester,
@@ -10,7 +11,11 @@ Future<void> pumpAuthApp(
   String initialRoute,
 ) async {
   await tester.pumpWidget(
-    AgriSmartGuideApp(initialRoute: initialRoute, authService: auth),
+    AgriSmartGuideApp(
+      initialRoute: initialRoute,
+      authService: auth,
+      profileRepository: FakeProfileRepository(),
+    ),
   );
   await tester.pumpAndSettle();
 }
