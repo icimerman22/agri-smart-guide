@@ -161,4 +161,105 @@ void main() {
       expect(await plantingCount(), 0);
     });
   });
+
+  group('FirestorePlantingRepository.updateStage', () {
+    test('sprema novu fazu i osvježava updatedAt', () async {
+      final clock = DateTime(2026, 6, 1, 12);
+      repository = FirestorePlantingRepository(
+        firestore: firestore,
+        clock: () => clock,
+      );
+      await seedParcel(firestore, 'p1', activePlantingId: 'a');
+      await seedPlanting(firestore, 'a', parcelId: 'p1');
+
+      await repository.updateStage(
+        ownerId: 'alice',
+        plantingId: 'a',
+        stage: 'flowering',
+      );
+
+      final data = await plantingData('a');
+      expect(data['stage'], 'flowering');
+      expect((data['updatedAt'] as Timestamp).toDate(), clock);
+      expect(data['status'], 'active');
+    });
+
+    test('odbija tuđu sadnju', () async {
+      await seedPlanting(firestore, 'a', ownerId: 'bob');
+
+      await expectLater(
+        repository.updateStage(
+          ownerId: 'alice',
+          plantingId: 'a',
+          stage: 'growth',
+        ),
+        plantingError(PlantingException.notPlantingOwner),
+      );
+
+      expect((await plantingData('a'))['stage'], 'planted');
+    });
+  });
+
+  group('FirestorePlantingRepository.updateStatus', () {
+    test('završetak sadnje oslobađa parcelu', () async {
+      await seedParcel(firestore, 'p1', activePlantingId: 'a');
+      await seedPlanting(firestore, 'a', parcelId: 'p1');
+
+      await repository.updateStatus(
+        ownerId: 'alice',
+        plantingId: 'a',
+        status: 'completed',
+      );
+
+      expect((await plantingData('a'))['status'], 'completed');
+      expect(await activePlantingOf('p1'), isNull);
+    });
+
+    test('ponovna aktivacija odbijena ako parcela ima aktivnu sadnju', () async {
+      await seedParcel(firestore, 'p1', activePlantingId: 'b');
+      await seedPlanting(firestore, 'a', parcelId: 'p1', status: 'completed');
+      await seedPlanting(firestore, 'b', parcelId: 'p1');
+
+      await expectLater(
+        repository.updateStatus(
+          ownerId: 'alice',
+          plantingId: 'a',
+          status: 'active',
+        ),
+        plantingError(PlantingException.parcelOccupied),
+      );
+
+      expect((await plantingData('a'))['status'], 'completed');
+      expect(await activePlantingOf('p1'), 'b');
+    });
+
+    test('odbija tuđu sadnju i ne mijenja parcelu', () async {
+      await seedParcel(firestore, 'p1', ownerId: 'bob', activePlantingId: 'a');
+      await seedPlanting(firestore, 'a', ownerId: 'bob', parcelId: 'p1');
+
+      await expectLater(
+        repository.updateStatus(
+          ownerId: 'alice',
+          plantingId: 'a',
+          status: 'completed',
+        ),
+        plantingError(PlantingException.notPlantingOwner),
+      );
+
+      expect((await plantingData('a'))['status'], 'active');
+      expect(await activePlantingOf('p1'), 'a');
+    });
+  });
+
+  group('FirestorePlantingRepository čitanje', () {
+    test('watchPlantings vraća samo sadnje vlasnika', () async {
+      await seedPlanting(firestore, 'a');
+      await seedPlanting(firestore, 'b', ownerId: 'bob');
+      await seedPlanting(firestore, 'c');
+
+      final plantings = await repository.watchPlantings('alice').first;
+
+      expect(plantings.map((p) => p.id).toSet(), {'a', 'c'});
+    });
+  });
 }
