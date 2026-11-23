@@ -6,6 +6,7 @@ import 'package:agri_smart_guide/features/plantings/domain/planting_repository.d
 import 'package:agri_smart_guide/features/plantings/presentation/planting_form_screen.dart';
 import 'package:agri_smart_guide/features/plantings/presentation/planting_keys.dart';
 import 'package:agri_smart_guide/features/plots/data/plot_repository.dart';
+import 'package:agri_smart_guide/shared/models/planting.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +53,28 @@ class _ThrowingPlantingRepository implements PlantingRepository {
       message: 'Sadnju možete evidentirati samo na vlastitoj parceli.',
     );
   }
+
+  @override
+  Stream<List<Planting>> watchPlantings(String ownerId) =>
+      throw UnimplementedError();
+
+  @override
+  Stream<Planting?> watchPlanting(String plantingId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> updateStage({
+    required String ownerId,
+    required String plantingId,
+    required String stage,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> updateStatus({
+    required String ownerId,
+    required String plantingId,
+    required String status,
+  }) => throw UnimplementedError();
 }
 
 void main() {

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../shared/models/planting.dart';
 import '../domain/planting_repository.dart';
+import '../domain/planting_stage.dart';
 
 class FirestorePlantingRepository implements PlantingRepository {
   FirestorePlantingRepository({
@@ -95,5 +96,133 @@ class FirestorePlantingRepository implements PlantingRepository {
     });
 
     return plantingRef.id;
+  }
+
+  @override
+  Stream<List<Planting>> watchPlantings(String ownerId) {
+    return _firestore
+        .collection('plantings')
+        .where('ownerId', isEqualTo: ownerId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map(Planting.fromFirestore).toList());
+  }
+
+  @override
+  Stream<Planting?> watchPlanting(String plantingId) {
+    return _firestore
+        .collection('plantings')
+        .doc(plantingId)
+        .snapshots()
+        .map((snapshot) => snapshot.exists ? Planting.fromFirestore(snapshot) : null);
+  }
+
+  @override
+  Future<void> updateStage({
+    required String ownerId,
+    required String plantingId,
+    required String stage,
+  }) async {
+    if (PlantingStage.fromKey(stage) == null) {
+      throw const PlantingException(
+        PlantingException.invalidStage,
+        message: 'Odabrana razvojna faza nije valjana.',
+      );
+    }
+
+    final ref = _firestore.collection('plantings').doc(plantingId);
+    final now = Timestamp.fromDate(_clock());
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(ref);
+      _requireOwnedPlanting(snapshot, ownerId);
+      transaction.update(ref, {'stage': stage, 'updatedAt': now});
+    });
+  }
+
+  @override
+  Future<void> updateStatus({
+    required String ownerId,
+    required String plantingId,
+    required String status,
+  }) async {
+    if (status != PlantingStatus.active && status != PlantingStatus.completed) {
+      throw const PlantingException(
+        PlantingException.invalidStatus,
+        message: 'Odabrani status uzgoja nije valjan.',
+      );
+    }
+
+    final plantingRef = _firestore.collection('plantings').doc(plantingId);
+    final now = Timestamp.fromDate(_clock());
+
+    await _firestore.runTransaction((transaction) async {
+      final plantingSnapshot = await transaction.get(plantingRef);
+      final planting = _requireOwnedPlanting(plantingSnapshot, ownerId);
+
+      final parcelRef = _firestore
+          .collection('parcels')
+          .doc(planting['parcelId'] as String);
+      final parcelSnapshot = await transaction.get(parcelRef);
+      final parcel = parcelSnapshot.data();
+      if (!parcelSnapshot.exists || parcel == null) {
+        throw const PlantingException(
+          PlantingException.parcelNotFound,
+          message: 'Parcela ove sadnje ne postoji.',
+        );
+      }
+
+      final activeId = parcel['activePlantingId'];
+
+      if (status == PlantingStatus.completed) {
+        transaction.update(plantingRef, {'status': status, 'updatedAt': now});
+        if (activeId == plantingId) {
+          transaction.update(parcelRef, {
+            'activePlantingId': null,
+            'updatedAt': now,
+          });
+        }
+        return;
+      }
+
+      if (activeId is String && activeId != plantingId) {
+        final otherSnapshot = await transaction.get(
+          _firestore.collection('plantings').doc(activeId),
+        );
+        if (otherSnapshot.exists &&
+            otherSnapshot.data()?['status'] != PlantingStatus.completed) {
+          throw const PlantingException(
+            PlantingException.parcelOccupied,
+            message:
+                'Na parceli već postoji aktivna sadnja. Prvo je označite kao završenu.',
+          );
+        }
+      }
+
+      transaction.update(plantingRef, {'status': status, 'updatedAt': now});
+      transaction.update(parcelRef, {
+        'activePlantingId': plantingId,
+        'updatedAt': now,
+      });
+    });
+  }
+
+  Map<String, dynamic> _requireOwnedPlanting(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    String ownerId,
+  ) {
+    final data = snapshot.data();
+    if (!snapshot.exists || data == null) {
+      throw const PlantingException(
+        PlantingException.plantingNotFound,
+        message: 'Sadnja ne postoji.',
+      );
+    }
+    if (data['ownerId'] != ownerId) {
+      throw const PlantingException(
+        PlantingException.notPlantingOwner,
+        message: 'Možete mijenjati samo vlastite posađene kulture.',
+      );
+    }
+    return data;
   }
 }
