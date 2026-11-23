@@ -3,6 +3,7 @@ import 'package:agri_smart_guide/features/crops/data/local_crop_data_source.dart
 import 'package:agri_smart_guide/features/crops/domain/models/crop_model.dart';
 import 'package:agri_smart_guide/features/plantings/data/firestore_planting_repository.dart';
 import 'package:agri_smart_guide/features/plantings/presentation/planting_detail_screen.dart';
+import 'package:agri_smart_guide/features/plantings/presentation/planting_form_screen.dart';
 import 'package:agri_smart_guide/features/plantings/presentation/planting_keys.dart';
 import 'package:agri_smart_guide/features/plantings/presentation/planting_list_screen.dart';
 import 'package:agri_smart_guide/features/plots/data/plot_repository.dart';
@@ -115,6 +116,17 @@ void main() {
       await pumpList(tester);
 
       expect(find.byKey(PlantingKeys.listEmpty), findsOneWidget);
+    });
+
+    testWidgets('gumb s plusom otvara formu za evidentiranje sadnje', (
+      tester,
+    ) async {
+      await pumpList(tester);
+
+      await tester.tap(find.byKey(PlantingKeys.openPlantingForm));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PlantingFormScreen), findsOneWidget);
     });
 
     testWidgets('dodir na stavku otvara detalje', (tester) async {

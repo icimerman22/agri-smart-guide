@@ -10,6 +10,7 @@ import '../domain/planting_formatters.dart';
 import '../domain/planting_repository.dart';
 import '../domain/planting_stage.dart';
 import 'planting_detail_screen.dart';
+import 'planting_form_screen.dart';
 import 'planting_keys.dart';
 
 class PlantingListScreen extends StatefulWidget {
@@ -55,6 +56,19 @@ class _PlantingListScreenState extends State<PlantingListScreen> {
       MaterialPageRoute<void>(
         builder: (_) => PlantingDetailScreen(
           plantingId: planting.id,
+          authService: widget.authService,
+          plotRepository: widget.plotRepository,
+          plantingRepository: widget.plantingRepository,
+          cropDataSource: widget.cropDataSource,
+        ),
+      ),
+    );
+  }
+
+  void _openForm() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PlantingFormScreen(
           authService: widget.authService,
           plotRepository: widget.plotRepository,
           plantingRepository: widget.plantingRepository,
@@ -200,6 +214,12 @@ class _PlantingListScreenState extends State<PlantingListScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Moje posađene kulture')),
       body: _buildBody(),
+      floatingActionButton: FloatingActionButton(
+        key: PlantingKeys.openPlantingForm,
+        onPressed: _openForm,
+        tooltip: 'Evidentiraj sadnju',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
