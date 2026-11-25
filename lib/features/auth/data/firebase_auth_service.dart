@@ -28,10 +28,38 @@ class FirebaseAuthService implements AuthService {
   }
 
   @override
-  Future<void> signIn({required String email, required String password}) async {
-    await _translateErrors(() async {
+  Future<SignInResult> signIn({
+    required String email,
+    required String password,
+  }) async {
+    try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
-    });
+      return const SignedIn();
+    } on FirebaseAuthMultiFactorException catch (error) {
+      final resolver = error.resolver;
+      final factor = resolver.hints
+          .whereType<TotpMultiFactorInfo>()
+          .firstOrNull;
+      if (factor == null) {
+        throw const AuthException(
+          'unsupported-second-factor',
+          message: 'Ovaj drugi faktor prijave nije podržan.',
+        );
+      }
+
+      return TotpSignInRequired((code) async {
+        await _translateErrors(() async {
+          final assertion =
+              await TotpMultiFactorGenerator.getAssertionForSignIn(
+                factor.uid,
+                code,
+              );
+          await resolver.resolveSignIn(assertion);
+        });
+      });
+    } on FirebaseAuthException catch (error) {
+      throw AuthException(error.code, message: error.message);
+    }
   }
 
   @override

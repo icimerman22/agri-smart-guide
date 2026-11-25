@@ -11,6 +11,7 @@ class FakeAuthService implements AuthService {
   AuthException? signOutError;
   Future<void>? registerGate;
   Future<void>? signInGate;
+  Future<void> Function(String code)? signInTotp;
   int registerCalls = 0;
   int signInCalls = 0;
   int signOutCalls = 0;
@@ -31,13 +32,24 @@ class FakeAuthService implements AuthService {
   }
 
   @override
-  Future<void> signIn({required String email, required String password}) async {
+  Future<SignInResult> signIn({
+    required String email,
+    required String password,
+  }) async {
     signInCalls++;
     lastEmail = email;
     lastPassword = password;
     if (signInGate != null) await signInGate;
     if (signInError != null) throw signInError!;
+    final verifyTotp = signInTotp;
+    if (verifyTotp != null) {
+      return TotpSignInRequired((code) async {
+        await verifyTotp(code);
+        currentUser = AuthUser(uid: 'test-user', email: email);
+      });
+    }
     currentUser = AuthUser(uid: 'test-user', email: email);
+    return const SignedIn();
   }
 
   AuthException? changePasswordError;

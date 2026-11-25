@@ -2,7 +2,10 @@ abstract interface class AuthService {
   AuthUser? get currentUser;
 
   Future<void> register({required String email, required String password});
-  Future<void> signIn({required String email, required String password});
+  Future<SignInResult> signIn({
+    required String email,
+    required String password,
+  });
   Future<void> signOut();
 
   /// Changes the password of the signed-in user after confirming the current
@@ -11,6 +14,20 @@ abstract interface class AuthService {
     required String currentPassword,
     required String newPassword,
   });
+}
+
+sealed class SignInResult {
+  const SignInResult();
+}
+
+final class SignedIn extends SignInResult {
+  const SignedIn();
+}
+
+final class TotpSignInRequired extends SignInResult {
+  const TotpSignInRequired(this.verify);
+
+  final Future<void> Function(String code) verify;
 }
 
 class AuthUser {
