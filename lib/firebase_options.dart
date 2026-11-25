@@ -60,4 +60,5 @@ class DefaultFirebaseOptions {
     databaseURL: 'https://agri-smart-guide-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'agri-smart-guide.firebasestorage.app',
   );
+
 }
