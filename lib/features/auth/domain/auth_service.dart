@@ -10,11 +10,15 @@ abstract interface class AuthService {
 
   /// Changes the password of the signed-in user after confirming the current
   /// password (Firebase requires recent re-authentication for this).
-  Future<void> changePassword({
+  /// Returns false if the requested second factor was not confirmed.
+  Future<bool> changePassword({
     required String currentPassword,
     required String newPassword,
+    required Future<void> Function(TotpVerifier verify) confirmTotp,
   });
 }
+
+typedef TotpVerifier = Future<void> Function(String code);
 
 sealed class SignInResult {
   const SignInResult();
@@ -27,7 +31,7 @@ final class SignedIn extends SignInResult {
 final class TotpSignInRequired extends SignInResult {
   const TotpSignInRequired(this.verify);
 
-  final Future<void> Function(String code) verify;
+  final TotpVerifier verify;
 }
 
 class AuthUser {

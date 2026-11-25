@@ -11,3 +11,11 @@
 - **Alat i upit** — OpenAI Codex. Uputa je bila implementirati samo prvi korak uz TDD i stati nakon prvog commita.
 - **Doprinos** — Codex je napisao widget testove i implementirao cijeli prvi korak, uključujući promjenu ugovora servisa, Firebase potvrdu TOTP-a i obrazac za kod. Ovaj način rada prema opsegu generiranog koda odgovara razini 4 za ovu priču. Za sljedeće priče planirana je razina 3, uz pomoć za pojedinačne isječke i provjeru koju provodi student. [Smjernice FOI-ja](https://dokumenti.foi.hr/document/download/362)
 - **Provjera** — Nakon dodavanja testnog sučelja, tri nova testa pala su prije implementacije. Zabilježili su prerani odlazak na početni zaslon i izostanak obrasca za kod. Nakon implementacije prolaze provjera ispravnog koda, odbijanje pogrešnog koda s ponovnim pokušajem, odustajanje i istek. Prošlo je svih 217 lokalnih Flutter testova, a statička analiza nije prijavila probleme. Stvarna prijava na testnom Firebase projektu još čeka provjeru na Androidu.
+
+## 25. 11. 2026. · Promjena lozinke uz TOTP
+
+**Alat i upit** — OpenAI Codex. Uputa „oke napravi commit 3“ odnosila se na cijelu priču o promjeni lozinke uz TOTP.
+
+**Doprinos** — Codex je dodao i pokrenuo dva widget testa prije uvođenja TOTP dijaloga, zatim implementirao dijalog i Firebaseovu ponovnu autentifikaciju. Firebaseova potvrda mora vrijediti za isti račun prije spremanja nove lozinke. Budući da je Codex napisao testove i implementirao cijelu priču, doprinos odgovara razini 4 i premašuje planiranu razinu 3. Radionica predviđa razinu 4 za jednu priču.
+
+**Provjera** — Oba nova testa prvo su pala jer dijalog za potvrdu još nije postojao. Nakon implementacije prolaze, zajedno s postojećim testovima prijave i promjene lozinke. Testovi provjeravaju da se lozinka mijenja tek nakon ispravnog koda i da se nakon pogrešnog koda ili odustajanja promjena ne izvršava. Statička analiza nema nalaza. Stvarna promjena lozinke s TOTP računom na Androidu još čeka provjeru.

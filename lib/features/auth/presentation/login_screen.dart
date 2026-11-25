@@ -15,8 +15,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  static final _totpPattern = RegExp(r'^[0-9]{6}$');
-
   final _formKey = GlobalKey<FormState>();
   final _totpFormKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -113,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _leaveTotp(error: 'Potvrda je istekla. Prijavite se ponovno.');
       } else {
         setState(
-          () => _errorMessage = AuthErrorMessages.totpSignIn(error.code),
+          () => _errorMessage = AuthErrorMessages.totpVerification(error.code),
         );
       }
     } finally {
@@ -155,9 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         border: const OutlineInputBorder(),
                         errorText: _errorMessage,
                       ),
-                      validator: (value) => _totpPattern.hasMatch(value ?? '')
-                          ? null
-                          : 'Unesite šesteroznamenkasti kod.',
+                      validator: AuthValidators.totpCode,
                       onFieldSubmitted: (_) => _confirmTotp(challenge),
                     ),
                     const SizedBox(height: 16),

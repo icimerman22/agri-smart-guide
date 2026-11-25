@@ -36,26 +36,9 @@ class FirebaseAuthService implements AuthService {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       return const SignedIn();
     } on FirebaseAuthMultiFactorException catch (error) {
-      final resolver = error.resolver;
-      final factor = resolver.hints
-          .whereType<TotpMultiFactorInfo>()
-          .firstOrNull;
-      if (factor == null) {
-        throw const AuthException(
-          'unsupported-second-factor',
-          message: 'Ovaj drugi faktor prijave nije podržan.',
-        );
-      }
-
+      final verify = _totpVerifier(error.resolver);
       return TotpSignInRequired((code) async {
-        await _translateErrors(() async {
-          final assertion =
-              await TotpMultiFactorGenerator.getAssertionForSignIn(
-                factor.uid,
-                code,
-              );
-          await resolver.resolveSignIn(assertion);
-        });
+        await verify(code);
       });
     } on FirebaseAuthException catch (error) {
       throw AuthException(error.code, message: error.message);
@@ -66,9 +49,10 @@ class FirebaseAuthService implements AuthService {
   Future<void> signOut() => _translateErrors(_auth.signOut);
 
   @override
-  Future<void> changePassword({
+  Future<bool> changePassword({
     required String currentPassword,
     required String newPassword,
+    required Future<void> Function(TotpVerifier verify) confirmTotp,
   }) async {
     final user = _auth.currentUser;
     final email = user?.email;
@@ -76,19 +60,63 @@ class FirebaseAuthService implements AuthService {
       throw const AuthException('no-current-user');
     }
 
-    await _translateErrors(() async {
+    return _translateErrors(() async {
       final credential = EmailAuthProvider.credential(
         email: email,
         password: currentPassword,
       );
-      await user.reauthenticateWithCredential(credential);
+
+      try {
+        await user.reauthenticateWithCredential(credential);
+      } on FirebaseAuthMultiFactorException catch (error) {
+        final verify = _totpVerifier(error.resolver);
+        var confirmed = false;
+        await confirmTotp((code) async {
+          _requireCurrentUser(user.uid);
+          final result = await verify(code);
+          if (result.user?.uid != user.uid) {
+            throw const AuthException('auth-user-changed');
+          }
+          confirmed = true;
+        });
+        if (!confirmed) return false;
+      }
+
+      _requireCurrentUser(user.uid);
       await user.updatePassword(newPassword);
+      return true;
     });
   }
 
-  Future<void> _translateErrors(Future<void> Function() action) async {
+  void _requireCurrentUser(String uid) {
+    if (_auth.currentUser?.uid != uid) {
+      throw const AuthException('auth-user-changed');
+    }
+  }
+
+  Future<UserCredential> Function(String code) _totpVerifier(
+    MultiFactorResolver resolver,
+  ) {
+    final factor = resolver.hints.whereType<TotpMultiFactorInfo>().firstOrNull;
+    if (factor == null) {
+      throw const AuthException(
+        'unsupported-second-factor',
+        message: 'Ovaj drugi faktor prijave nije podržan.',
+      );
+    }
+
+    return (code) => _translateErrors(() async {
+      final assertion = await TotpMultiFactorGenerator.getAssertionForSignIn(
+        factor.uid,
+        code,
+      );
+      return resolver.resolveSignIn(assertion);
+    });
+  }
+
+  Future<T> _translateErrors<T>(Future<T> Function() action) async {
     try {
-      await action();
+      return await action();
     } on FirebaseAuthException catch (error) {
       throw AuthException(error.code, message: error.message);
     }

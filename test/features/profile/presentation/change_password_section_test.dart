@@ -34,7 +34,79 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> startPasswordChangeWithTotp(WidgetTester tester) async {
+    auth.changePasswordTotp = (code) async {
+      if (code != '012345') {
+        throw const AuthException('invalid-verification-code');
+      }
+    };
+    await openProfile(tester);
+    await submit(
+      tester,
+      current: 'stara123',
+      next: 'nova1234',
+      confirm: 'nova1234',
+    );
+  }
+
+  Future<void> confirmTotp(WidgetTester tester, String code) async {
+    final dialog = find.byType(AlertDialog);
+    await tester.enterText(
+      find.descendant(of: dialog, matching: find.byType(TextFormField)),
+      code,
+    );
+    await tester.tap(find.widgetWithText(TextButton, 'Potvrdi'));
+    await tester.pumpAndSettle();
+  }
+
   group('Promjena lozinke', () {
+    testWidgets('mijenja lozinku tek nakon ispravnog TOTP koda', (
+      tester,
+    ) async {
+      await startPasswordChangeWithTotp(tester);
+
+      expect(find.text('Potvrdite promjenu lozinke'), findsOneWidget);
+      expect(auth.passwordUpdates, 0);
+      await confirmTotp(tester, '000000');
+
+      expect(
+        find.text('Kod nije ispravan. Pokušajte ponovno.'),
+        findsOneWidget,
+      );
+      expect(find.text('Lozinka je uspješno promijenjena.'), findsNothing);
+      expect(auth.passwordUpdates, 0);
+
+      await confirmTotp(tester, '012345');
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.text('Lozinka je uspješno promijenjena.'), findsOneWidget);
+      expect(auth.passwordUpdates, 1);
+    });
+
+    testWidgets('odustajanje od TOTP potvrde ne mijenja lozinku', (
+      tester,
+    ) async {
+      await startPasswordChangeWithTotp(tester);
+
+      expect(find.text('Potvrdite promjenu lozinke'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Odustani'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.text('Lozinka je uspješno promijenjena.'), findsNothing);
+      expect(auth.passwordUpdates, 0);
+      expect(
+        tester
+            .widget<OutlinedButton>(
+              find.descendant(
+                of: find.byKey(ProfileKeys.changePassword),
+                matching: find.byType(OutlinedButton),
+              ),
+            )
+            .onPressed,
+        isNotNull,
+      );
+    });
+
     testWidgets('traži sva polja', (tester) async {
       await openProfile(tester);
       await submit(tester);
@@ -83,6 +155,7 @@ void main() {
       );
 
       expect(auth.changePasswordCalls, 1);
+      expect(auth.passwordUpdates, 1);
       expect(auth.lastCurrentPassword, 'stara123');
       expect(auth.lastNewPassword, 'nova1234');
       expect(find.text('Lozinka je uspješno promijenjena.'), findsOneWidget);

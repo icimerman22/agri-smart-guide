@@ -53,19 +53,33 @@ class FakeAuthService implements AuthService {
   }
 
   AuthException? changePasswordError;
+  Future<void> Function(String code)? changePasswordTotp;
   int changePasswordCalls = 0;
+  int passwordUpdates = 0;
   String? lastCurrentPassword;
   String? lastNewPassword;
 
   @override
-  Future<void> changePassword({
+  Future<bool> changePassword({
     required String currentPassword,
     required String newPassword,
+    required Future<void> Function(TotpVerifier verify) confirmTotp,
   }) async {
     changePasswordCalls++;
     lastCurrentPassword = currentPassword;
     lastNewPassword = newPassword;
     if (changePasswordError != null) throw changePasswordError!;
+    final verify = changePasswordTotp;
+    if (verify != null) {
+      var confirmed = false;
+      await confirmTotp((code) async {
+        await verify(code);
+        confirmed = true;
+      });
+      if (!confirmed) return false;
+    }
+    passwordUpdates++;
+    return true;
   }
 
   @override

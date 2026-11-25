@@ -9,6 +9,11 @@ class AuthValidators {
   static const int minPasswordLength = 6;
 
   static final RegExp _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+  static final RegExp _totpPattern = RegExp(r'^[0-9]{6}$');
+
+  static String? totpCode(String? value) => _totpPattern.hasMatch(value ?? '')
+      ? null
+      : 'Unesite šesteroznamenkasti kod.';
 
   static String? email(String? value) {
     final email = value?.trim() ?? '';
