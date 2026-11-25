@@ -17,7 +17,7 @@ class LockoutAuthService implements AuthService {
   }) : _store = store ?? InMemoryLoginAttemptStore(),
        _now = now ?? DateTime.now;
 
-  static const String lockedCode = 'account-locked';
+  static const String lockedCode = accountLockedCode;
 
   /// Samo ovi kodovi znače pogrešne podatke za prijavu; ostali (npr. mreža)
   /// se ne broje.

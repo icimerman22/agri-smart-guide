@@ -1,3 +1,6 @@
+/// Kod [AuthException] kad je prijava odbijena jer je račun zaključan.
+const String accountLockedCode = 'account-locked';
+
 /// Stanje neuspjelih prijava za jedan e-mail.
 class LoginAttemptRecord {
   const LoginAttemptRecord({required this.failures, this.lockedUntil});

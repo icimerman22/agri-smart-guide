@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../app/routes.dart';
 import '../domain/auth_service.dart';
 import '../domain/auth_validators.dart';
+import '../domain/login_attempt_store.dart';
 import 'auth_keys.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -51,6 +52,10 @@ class _LoginScreenState extends State<LoginScreen> {
             _errorMessage = 'Neispravna e-mail adresa ili lozinka.';
           } else if (e.code == 'invalid-email') {
             _errorMessage = 'Format e-mail adrese nije valjan.';
+          } else if (e.code == accountLockedCode) {
+            _errorMessage =
+                'Račun je privremeno zaključan nakon 5 neuspjelih pokušaja. '
+                'Pokušajte ponovno za 15 minuta.';
           } else {
             _errorMessage = 'Došlo je do pogreške: ${e.message}';
           }
