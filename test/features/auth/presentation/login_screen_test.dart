@@ -92,24 +92,29 @@ void main() {
       });
     }
 
-    testWidgets('allows a corrected form and preserves a six-character password', (
-      tester,
-    ) async {
-      final auth = FakeAuthService();
-      await pumpAuthApp(tester, auth, AppRoutes.login);
-      await tapAuthButton(tester, AuthKeys.loginSubmit);
-      await tester.pumpAndSettle();
-      expect(find.text('Molimo unesite lozinku.'), findsOneWidget);
+    testWidgets(
+      'allows a corrected form and preserves a six-character password',
+      (tester) async {
+        final auth = FakeAuthService();
+        await pumpAuthApp(tester, auth, AppRoutes.login);
+        await tapAuthButton(tester, AuthKeys.loginSubmit);
+        await tester.pumpAndSettle();
+        expect(find.text('Molimo unesite lozinku.'), findsOneWidget);
 
-      await fillLogin(tester, email: ' user@example.com ', password: ' 1234 ');
-      await tapAuthButton(tester, AuthKeys.loginSubmit);
-      await tester.pumpAndSettle();
+        await fillLogin(
+          tester,
+          email: ' user@example.com ',
+          password: ' 1234 ',
+        );
+        await tapAuthButton(tester, AuthKeys.loginSubmit);
+        await tester.pumpAndSettle();
 
-      expect(auth.signInCalls, 1);
-      expect(auth.lastEmail, 'user@example.com');
-      expect(auth.lastPassword, ' 1234 ');
-      expect(find.byType(HomeScreen), findsOneWidget);
-    });
+        expect(auth.signInCalls, 1);
+        expect(auth.lastEmail, 'user@example.com');
+        expect(auth.lastPassword, ' 1234 ');
+        expect(find.byType(HomeScreen), findsOneWidget);
+      },
+    );
   });
 
   group('Login service responses', () {
@@ -177,6 +182,97 @@ void main() {
       pending.complete();
       await tester.pumpAndSettle();
       expect(find.byType(HomeScreen), findsOneWidget);
+    });
+  });
+
+  group('Google sign-in', () {
+    testWidgets('login screen shows the Google sign-in button', (tester) async {
+      await pumpAuthApp(tester, FakeAuthService(), AppRoutes.login);
+
+      expect(find.byKey(AuthKeys.loginGoogle), findsOneWidget);
+      expect(find.text('Prijava Googleom'), findsOneWidget);
+    });
+
+    testWidgets('tapping the button signs in and opens home', (tester) async {
+      final auth = FakeAuthService();
+      await pumpAuthApp(tester, auth, AppRoutes.login);
+
+      await tapAuthButton(tester, AuthKeys.loginGoogle);
+      await tester.pumpAndSettle();
+
+      expect(auth.googleSignInCalls, 1);
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
+    testWidgets('cancelling keeps the user on login without an error', (
+      tester,
+    ) async {
+      final auth = FakeAuthService()..googleSignInCancelled = true;
+      await pumpAuthApp(tester, auth, AppRoutes.login);
+
+      await tapAuthButton(tester, AuthKeys.loginGoogle);
+      await tester.pumpAndSettle();
+
+      expect(auth.googleSignInCalls, 1);
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(HomeScreen), findsNothing);
+      expect(find.textContaining('pogreške'), findsNothing);
+      expect(auth.currentUser, isNull);
+    });
+
+    testWidgets('shows an error when Google sign-in fails', (tester) async {
+      final auth = FakeAuthService()
+        ..googleSignInError = const AuthException(
+          'network-error',
+          message: 'x',
+        );
+      await pumpAuthApp(tester, auth, AppRoutes.login);
+
+      await tapAuthButton(tester, AuthKeys.loginGoogle);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Došlo je do pogreške'), findsOneWidget);
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+
+    testWidgets('prevents duplicate Google requests while signing in', (
+      tester,
+    ) async {
+      final pending = Completer<void>();
+      final auth = FakeAuthService()..googleSignInGate = pending.future;
+      await pumpAuthApp(tester, auth, AppRoutes.login);
+
+      await tapAuthButton(tester, AuthKeys.loginGoogle);
+      await tapAuthButton(tester, AuthKeys.loginGoogle);
+      expect(auth.googleSignInCalls, 1);
+
+      pending.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+    testWidgets('disables other buttons and shows a spinner while signing in', (
+      tester,
+    ) async {
+      final pending = Completer<void>();
+      final auth = FakeAuthService()..googleSignInGate = pending.future;
+      await pumpAuthApp(tester, auth, AppRoutes.login);
+
+      await tapAuthButton(tester, AuthKeys.loginGoogle);
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(
+        tester
+            .widget<ElevatedButton>(find.byKey(AuthKeys.loginSubmit))
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester.widget<TextButton>(find.byKey(AuthKeys.goToRegister)).onPressed,
+        isNull,
+      );
+
+      pending.complete();
+      await tester.pumpAndSettle();
     });
   });
 }

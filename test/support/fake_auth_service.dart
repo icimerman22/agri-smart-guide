@@ -16,6 +16,10 @@ class FakeAuthService implements AuthService {
   int signOutCalls = 0;
   String? lastEmail;
   String? lastPassword;
+  AuthException? googleSignInError;
+  Future<void>? googleSignInGate;
+  bool googleSignInCancelled = false;
+  int googleSignInCalls = 0;
 
   @override
   Future<void> register({
@@ -61,5 +65,15 @@ class FakeAuthService implements AuthService {
     signOutCalls++;
     if (signOutError != null) throw signOutError!;
     currentUser = null;
+  }
+
+  @override
+  Future<bool> signInWithGoogle() async {
+    googleSignInCalls++;
+    if (googleSignInGate != null) await googleSignInGate;
+    if (googleSignInError != null) throw googleSignInError!;
+    if (googleSignInCancelled) return false;
+    currentUser = const AuthUser(uid: 'google-user', email: 'g@example.com');
+    return true;
   }
 }

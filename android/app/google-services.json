@@ -13,7 +13,20 @@
           "package_name": "com.getasoftware.agri_smart_guide"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1079203745813-hho6bqjitd6g0hjkdtlslicfho25eb3n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.getasoftware.agri_smart_guide",
+            "certificate_hash": "dd99d24086207ed43ec5f549af1753bb2ada04bb"
+          }
+        },
+        {
+          "client_id": "1079203745813-72m8650jfg4jcgdvkr7k99rte1bh8c4e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB3vTTX_qjDlrbQ3SjKGoiG_2_5l3os8dM"
@@ -21,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1079203745813-72m8650jfg4jcgdvkr7k99rte1bh8c4e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
