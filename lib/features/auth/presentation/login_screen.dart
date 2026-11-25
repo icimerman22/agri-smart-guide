@@ -47,7 +47,9 @@ class _LoginScreenState extends State<LoginScreen> {
       } on AuthException catch (e) {
         if (!mounted) return;
         setState(() {
-          if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+          if (e.code == 'user-not-found' ||
+              e.code == 'wrong-password' ||
+              e.code == 'invalid-credential') {
             _errorMessage = 'Neispravna e-mail adresa ili lozinka.';
           } else if (e.code == 'invalid-email') {
             _errorMessage = 'Format e-mail adrese nije valjan.';
@@ -70,12 +72,43 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _handleGoogleLogin() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final signedIn = await widget.authService.signInWithGoogle();
+      if (!mounted) return;
+      if (signedIn) {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = "Došlo je do pogreške: ${e.message}";
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Neočekivana pogreška. Pokušajte ponovno.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agri Smart Guide - Prijava'),
-      ),
+      appBar: AppBar(title: const Text('Agri Smart Guide - Prijava')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(
@@ -149,18 +182,37 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _isLoading ? null : _handleLogin,
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Prijavi se', style: TextStyle(fontSize: 16)),
+                          : const Text(
+                              'Prijavi se',
+                              style: TextStyle(fontSize: 16),
+                            ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton(
+                      key: AuthKeys.loginGoogle,
+                      onPressed: _isLoading ? null : _handleGoogleLogin,
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'Google Prijava',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                    ),
+                  ),
 
                   TextButton(
                     key: AuthKeys.goToRegister,
                     onPressed: _isLoading
                         ? null
                         : () {
-                      Navigator.pushReplacementNamed(context, AppRoutes.register);
-                    },
+                            Navigator.pushReplacementNamed(
+                              context,
+                              AppRoutes.register,
+                            );
+                          },
                     child: const Text('Nemate račun? Registrirajte se'),
                   ),
                 ],
