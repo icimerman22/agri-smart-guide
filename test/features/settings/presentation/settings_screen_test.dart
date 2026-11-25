@@ -28,7 +28,93 @@ void main() {
       .widget<SwitchListTile>(find.byKey(SettingsKeys.notification(type)))
       .value;
 
+  Future<void> openTotpSetup(WidgetTester tester) async {
+    await openSettings(tester);
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    final enableTotp = find.text('Uključi 2FA');
+    expect(enableTotp, findsOneWidget);
+    await tester.tap(enableTotp);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> submitTotpField(
+    WidgetTester tester,
+    String value,
+    String button,
+  ) async {
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextFormField),
+      ),
+      value,
+    );
+    await tester.tap(find.widgetWithText(TextButton, button));
+    await tester.pumpAndSettle();
+  }
+
   group('Postavke', () {
+    testWidgets('prije uključivanja 2FA traži potvrdu e-adrese', (
+      tester,
+    ) async {
+      await openTotpSetup(tester);
+
+      expect(
+        find.text('Potvrdite e-adresu prije uključivanja 2FA.'),
+        findsOneWidget,
+      );
+      expect(find.text('Pošalji poruku za potvrdu'), findsOneWidget);
+      expect(find.text('Ključ za postavljanje'), findsNothing);
+      await tester.tap(find.text('Pošalji poruku za potvrdu'));
+      await tester.pumpAndSettle();
+      expect(auth.totpVerificationEmails, 1);
+
+      auth.totpEmailVerified = true;
+      await tester.tap(find.text('Provjeri potvrdu'));
+      await tester.pumpAndSettle();
+      expect(find.text('Trenutna lozinka'), findsOneWidget);
+      expect(find.text('Ključ za postavljanje'), findsNothing);
+    });
+
+    testWidgets('2FA se uključuje tek nakon potvrde točnog koda', (
+      tester,
+    ) async {
+      auth.totpEmailVerified = true;
+      await openTotpSetup(tester);
+      expect(find.text('Ključ za postavljanje'), findsNothing);
+
+      await submitTotpField(tester, 'stara123', 'Nastavi');
+      expect(auth.lastTotpPassword, 'stara123');
+      expect(find.text('Ključ za postavljanje'), findsOneWidget);
+      expect(auth.totpEnabled, isFalse);
+
+      await submitTotpField(tester, '000000', 'Potvrdi');
+      expect(
+        find.text('Kod nije ispravan. Pokušajte ponovno.'),
+        findsOneWidget,
+      );
+      expect(auth.totpEnabled, isFalse);
+
+      await submitTotpField(tester, '012345', 'Potvrdi');
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(auth.totpEnabled, isTrue);
+      expect(find.text('2FA je uključen'), findsOneWidget);
+    });
+
+    testWidgets('odustajanje napušta postavljanje bez aktivacije', (
+      tester,
+    ) async {
+      auth.totpEmailVerified = true;
+      await openTotpSetup(tester);
+      await submitTotpField(tester, 'stara123', 'Nastavi');
+      await tester.tap(find.text('Odustani'));
+      await tester.pumpAndSettle();
+      expect(auth.totpEnabled, isFalse);
+      expect(find.text('Ključ za postavljanje'), findsNothing);
+      expect(find.text('Uključi 2FA'), findsOneWidget);
+    });
+
     testWidgets('novi korisnik vidi zadane postavke', (tester) async {
       await openSettings(tester);
 
@@ -120,6 +206,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(ProfileKeys.openSettings));
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.byKey(SettingsKeys.logout), 150);
       await tapAuthButton(tester, SettingsKeys.logout);
       await tester.pumpAndSettle();
 
@@ -135,6 +222,7 @@ void main() {
     testWidgets('neuspjela odjava ostaje na postavkama', (tester) async {
       auth.signOutError = const AuthException('network-request-failed');
       await openSettings(tester);
+      await tester.scrollUntilVisible(find.byKey(SettingsKeys.logout), 150);
       await tapAuthButton(tester, SettingsKeys.logout);
       await tester.pumpAndSettle();
 

@@ -2,6 +2,23 @@
 class AuthErrorMessages {
   AuthErrorMessages._();
 
+  static bool totpChallengeExpired(String code) => switch (code) {
+    'invalid-multi-factor-session' ||
+    'missing-multi-factor-session' ||
+    'multi-factor-info-not-found' ||
+    'session-expired' => true,
+    _ => false,
+  };
+
+  static String totpVerification(String code) => switch (code) {
+    'invalid-verification-code' => 'Kod nije ispravan. Pokušajte ponovno.',
+    'network-request-failed' =>
+      'Nema internetske veze. Provjerite vezu i pokušajte ponovno.',
+    'too-many-requests' =>
+      'Previše pokušaja. Pričekajte malo pa pokušajte ponovno.',
+    _ => 'Kod nije moguće potvrditi. Pokušajte ponovno.',
+  };
+
   /// Poruka za neuspjelu registraciju prema `FirebaseAuthException.code`.
   static String registration(String code) {
     switch (code) {
@@ -32,6 +49,10 @@ class AuthErrorMessages {
         return 'Iz sigurnosnih razloga ponovno se prijavite pa pokušajte opet.';
       case 'no-current-user':
         return 'Niste prijavljeni.';
+      case 'auth-user-changed':
+        return 'Aktivni račun se promijenio. Pokušajte ponovno.';
+      case 'unsupported-second-factor':
+        return 'Ovaj drugi faktor nije podržan za promjenu lozinke.';
       case 'network-request-failed':
         return 'Nema internetske veze. Provjerite vezu i pokušajte ponovno.';
       case 'too-many-requests':

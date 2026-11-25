@@ -9,6 +9,7 @@ import '../../profile/domain/profile_repository.dart';
 import '../../profile/domain/settings_defaults.dart';
 import '../../profile/presentation/location_picker.dart';
 import 'settings_keys.dart';
+import 'totp_settings_tile.dart';
 
 /// Notification types shown on S06, keyed as in
 /// `users/{uid}.notificationSettings`.
@@ -271,6 +272,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
+        const Divider(height: 32),
+        TotpSettingsTile(authService: widget.authService),
         const Divider(height: 32),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),

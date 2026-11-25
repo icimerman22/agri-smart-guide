@@ -59,11 +59,12 @@ class _ChangePasswordSectionState extends State<ChangePasswordSection> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      await widget.authService.changePassword(
+      final changed = await widget.authService.changePassword(
         currentPassword: _currentPasswordController.text,
         newPassword: _newPasswordController.text,
+        confirmTotp: _confirmTotp,
       );
-      if (!mounted) return;
+      if (!mounted || !changed) return;
       _formKey.currentState!.reset();
       _currentPasswordController.clear();
       _newPasswordController.clear();
@@ -79,6 +80,15 @@ class _ChangePasswordSectionState extends State<ChangePasswordSection> {
     } finally {
       if (mounted) setState(() => _isChanging = false);
     }
+  }
+
+  Future<void> _confirmTotp(TotpVerifier verify) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _PasswordChangeTotpDialog(verify: verify),
+    );
   }
 
   @override
@@ -128,6 +138,98 @@ class _ChangePasswordSectionState extends State<ChangePasswordSection> {
             text: _isChanging ? 'Mijenjanje...' : 'Promijeni lozinku',
             variant: AppButtonVariant.secondary,
             onPressed: _isChanging ? null : _changePassword,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PasswordChangeTotpDialog extends StatefulWidget {
+  const _PasswordChangeTotpDialog({required this.verify});
+
+  final TotpVerifier verify;
+
+  @override
+  State<_PasswordChangeTotpDialog> createState() =>
+      _PasswordChangeTotpDialogState();
+}
+
+class _PasswordChangeTotpDialogState extends State<_PasswordChangeTotpDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _codeController = TextEditingController();
+  bool _isVerifying = false;
+  bool _challengeEnded = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _confirm() async {
+    if (_isVerifying || _challengeEnded || !_formKey.currentState!.validate()) {
+      return;
+    }
+    setState(() {
+      _isVerifying = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await widget.verify(_codeController.text);
+      if (mounted) Navigator.of(context).pop();
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      final expired = AuthErrorMessages.totpChallengeExpired(error.code);
+      final accountChanged = error.code == 'auth-user-changed';
+      setState(() {
+        _challengeEnded = expired || accountChanged;
+        _errorMessage = switch (error.code) {
+          _ when expired => 'Potvrda je istekla. Pokrenite promjenu ponovno.',
+          _ when accountChanged => AuthErrorMessages.passwordChange(error.code),
+          _ => AuthErrorMessages.totpVerification(error.code),
+        };
+      });
+    } finally {
+      if (mounted) setState(() => _isVerifying = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canConfirm = !_isVerifying && !_challengeEnded;
+    return PopScope(
+      canPop: !_isVerifying,
+      child: AlertDialog(
+        title: const Text('Potvrdite promjenu lozinke'),
+        scrollable: true,
+        content: Form(
+          key: _formKey,
+          child: TextFormField(
+            controller: _codeController,
+            enabled: canConfirm,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.oneTimeCode],
+            decoration: InputDecoration(
+              labelText: 'Kod iz autentifikatorske aplikacije',
+              errorText: _errorMessage,
+              errorMaxLines: 3,
+            ),
+            validator: AuthValidators.totpCode,
+            onFieldSubmitted: (_) => _confirm(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _isVerifying ? null : () => Navigator.of(context).pop(),
+            child: const Text('Odustani'),
+          ),
+          TextButton(
+            onPressed: canConfirm ? _confirm : null,
+            child: Text(_isVerifying ? 'Provjera…' : 'Potvrdi'),
           ),
         ],
       ),

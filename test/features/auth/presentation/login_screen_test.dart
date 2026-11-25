@@ -20,7 +20,103 @@ Future<void> fillLogin(
   await enterAuthText(tester, AuthKeys.loginPassword, password);
 }
 
+Future<void> startTotpSignIn(WidgetTester tester, FakeAuthService auth) async {
+  await pumpAuthApp(tester, auth, AppRoutes.login);
+  await fillLogin(tester);
+  await tapAuthButton(tester, AuthKeys.loginSubmit);
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  group('TOTP sign-in', () {
+    testWidgets('waits for the second factor before opening home', (
+      tester,
+    ) async {
+      final pending = Completer<void>();
+      final auth = FakeAuthService()
+        ..signInTotp = (code) async {
+          expect(code, '012345');
+          await pending.future;
+        };
+
+      await startTotpSignIn(tester, auth);
+
+      expect(find.byType(HomeScreen), findsNothing);
+      expect(auth.currentUser, isNull);
+      await enterAuthText(tester, AuthKeys.loginTotpCode, '01234');
+      await tapAuthButton(tester, AuthKeys.loginTotpSubmit);
+      expect(find.text('Unesite šesteroznamenkasti kod.'), findsOneWidget);
+      await enterAuthText(tester, AuthKeys.loginTotpCode, '012345');
+      await tapAuthButton(tester, AuthKeys.loginTotpSubmit);
+      expect(auth.currentUser, isNull);
+      expect(find.byType(HomeScreen), findsNothing);
+
+      pending.complete();
+      await tester.pumpAndSettle();
+      expect(auth.currentUser?.email, 'user@example.com');
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
+    testWidgets('rejects an incorrect code and lets the user retry', (
+      tester,
+    ) async {
+      final auth = FakeAuthService()
+        ..signInTotp = (code) async {
+          if (code != '123456') {
+            throw const AuthException('invalid-verification-code');
+          }
+        };
+
+      await startTotpSignIn(tester, auth);
+      await enterAuthText(tester, AuthKeys.loginTotpCode, '000000');
+      await tapAuthButton(tester, AuthKeys.loginTotpSubmit);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Kod nije ispravan. Pokušajte ponovno.'),
+        findsOneWidget,
+      );
+      expect(auth.currentUser, isNull);
+      expect(find.byType(HomeScreen), findsNothing);
+      await enterAuthText(tester, AuthKeys.loginTotpCode, '123456');
+      await tapAuthButton(tester, AuthKeys.loginTotpSubmit);
+      await tester.pumpAndSettle();
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
+    testWidgets('returns to login after cancellation or expiration', (
+      tester,
+    ) async {
+      final auth = FakeAuthService()
+        ..signInTotp = (_) async {
+          throw const AuthException('invalid-multi-factor-session');
+        };
+
+      await startTotpSignIn(tester, auth);
+      await tapAuthButton(tester, AuthKeys.loginTotpCancel);
+      await tester.pumpAndSettle();
+      expect(find.byKey(AuthKeys.loginTotpCode), findsNothing);
+      expect(auth.currentUser, isNull);
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(HomeScreen), findsNothing);
+
+      await fillLogin(tester);
+      await tapAuthButton(tester, AuthKeys.loginSubmit);
+      await tester.pumpAndSettle();
+      await enterAuthText(tester, AuthKeys.loginTotpCode, '123456');
+      await tapAuthButton(tester, AuthKeys.loginTotpSubmit);
+      await tester.pumpAndSettle();
+      expect(find.byKey(AuthKeys.loginTotpCode), findsNothing);
+      expect(
+        find.text('Potvrda je istekla. Prijavite se ponovno.'),
+        findsOneWidget,
+      );
+      expect(auth.currentUser, isNull);
+      expect(find.byType(HomeScreen), findsNothing);
+      expect(auth.signInCalls, 2);
+    });
+  });
+
   group('Login form validation', () {
     final scenarios = [
       (

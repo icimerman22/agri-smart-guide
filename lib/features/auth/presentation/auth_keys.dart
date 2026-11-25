@@ -4,6 +4,9 @@ abstract final class AuthKeys {
   static const loginEmail = ValueKey('loginEmail');
   static const loginPassword = ValueKey('loginPassword');
   static const loginSubmit = ValueKey('loginSubmit');
+  static const loginTotpCode = ValueKey('loginTotpCode');
+  static const loginTotpSubmit = ValueKey('loginTotpSubmit');
+  static const loginTotpCancel = ValueKey('loginTotpCancel');
   static const goToRegister = ValueKey('goToRegister');
   static const registerEmail = ValueKey('registerEmail');
   static const registerPassword = ValueKey('registerPassword');
