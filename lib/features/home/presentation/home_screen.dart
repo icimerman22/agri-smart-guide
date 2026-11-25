@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../app/routes.dart';
+import '../../../shared/models/farm_task.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../auth/domain/auth_service.dart';
 import '../../auth/presentation/auth_keys.dart';
@@ -11,15 +12,29 @@ import '../../plantings/presentation/planting_keys.dart';
 import '../../plantings/presentation/planting_list_screen.dart';
 import '../../plots/data/plot_repository.dart';
 import '../../plots/presentation/plot_list_screen.dart';
+import '../../tasks/presentation/task_list_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.authService});
 
   final AuthService authService;
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _tasks = ValueNotifier<List<FarmTask>>(const []);
+
+  @override
+  void dispose() {
+    _tasks.dispose();
+    super.dispose();
+  }
+
   Future<void> _handleLogout(BuildContext context) async {
     try {
-      await authService.signOut();
+      await widget.authService.signOut();
 
       if (!context.mounted) return;
 
@@ -48,7 +63,7 @@ class HomeScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PlotListScreen(
-          authService: authService,
+          authService: widget.authService,
           plotRepository: PlotRepository(),
         ),
       ),
@@ -59,7 +74,7 @@ class HomeScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PlantingListScreen(
-          authService: authService,
+          authService: widget.authService,
           plotRepository: PlotRepository(),
           plantingRepository: FirestorePlantingRepository(),
           cropDataSource: LocalCropDataSource(),
@@ -68,9 +83,17 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  void _openTaskList(BuildContext context, String ownerId) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TaskListScreen(ownerId: ownerId, tasks: _tasks),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = authService.currentUser;
+    final user = widget.authService.currentUser;
 
     return Scaffold(
       appBar: AppBar(
@@ -91,7 +114,7 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -136,6 +159,14 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 12),
 
+              AppButton(
+                text: 'Zadaci',
+                onPressed: user == null
+                    ? null
+                    : () => _openTaskList(context, user.uid),
+              ),
+
+              const SizedBox(height: 12),
               AppButton(
                 key: AuthKeys.logout,
                 text: 'Odjavi se',
