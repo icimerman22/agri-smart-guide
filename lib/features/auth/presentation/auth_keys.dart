@@ -12,4 +12,5 @@ abstract final class AuthKeys {
   static const goToLogin = ValueKey('goToLogin');
   static const logout = ValueKey('logout');
   static const logoutIcon = ValueKey('logoutIcon');
+  static const loginGoogle = Key('loginGoogle');
 }

@@ -1,5 +1,6 @@
 abstract interface class AuthService {
   AuthUser? get currentUser;
+  Future<bool> signInWithGoogle();
 
   Future<void> register({required String email, required String password});
   Future<void> signIn({required String email, required String password});

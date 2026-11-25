@@ -65,4 +65,9 @@ class FirebaseAuthService implements AuthService {
       throw AuthException(error.code, message: error.message);
     }
   }
+
+  @override
+  Future<bool> signInWithGoogle() {
+    throw UnimplementedError();
+  }
 }
