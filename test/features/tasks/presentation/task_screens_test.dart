@@ -34,6 +34,63 @@ Future<void> pickDate(WidgetTester tester, String date) async {
 
 void main() {
   testWidgets(
+    'Title and date are required independently, description is optional',
+    (tester) async {
+      final repository = FakeTaskRepository();
+      await pumpAuthApp(
+        tester,
+        FakeAuthService(currentUser: alice),
+        AppRoutes.home,
+        taskRepository: repository,
+      );
+      await tapAndSettle(tester, find.text('Zadaci'));
+      await tapAndSettle(tester, find.byTooltip('Dodaj zadatak'));
+      final title = find.widgetWithText(TextFormField, 'Naziv');
+      final save = find.text('Spremi');
+
+      await tester.enterText(title, 'Zalij vrt');
+      await tapAndSettle(tester, save);
+      expect(find.text('Odaberite datum.'), findsOneWidget);
+      expect(find.text('Unesite naziv zadatka.'), findsNothing);
+      expect(repository.tasksFor(alice.uid), isEmpty);
+
+      await tapAndSettle(tester, find.text('Odaberite datum'));
+      await pickDate(tester, '04/14/2030');
+      await tester.enterText(title, '   ');
+      await tapAndSettle(tester, save);
+      expect(find.text('Unesite naziv zadatka.'), findsOneWidget);
+      expect(find.text('Odaberite datum.'), findsNothing);
+      expect(repository.tasksFor(alice.uid), isEmpty);
+
+      await tester.enterText(title, 'Zalij vrt');
+      await tapAndSettle(tester, save);
+      final task = repository.tasksFor(alice.uid).single;
+      expect(task.description, isEmpty);
+      expect(find.text('Zalij vrt'), findsOneWidget);
+      expect(find.text('14.04.2030 • Neizvršen'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      expect(repository.isWatching(alice.uid), isFalse);
+      await pumpAuthApp(
+        tester,
+        FakeAuthService(currentUser: alice),
+        AppRoutes.home,
+        taskRepository: repository,
+      );
+      await tapAndSettle(tester, find.text('Zadaci'));
+      expect(find.text('Zalij vrt'), findsOneWidget);
+
+      await repository.updateTask(
+        FarmTask.fromMap(task.id, {...task.toMap(), 'title': 'Zalij rajčice'}),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Zalij vrt'), findsNothing);
+      expect(find.text('Zalij rajčice'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'Home opens task management with validation, editing and deletion',
     (tester) async {
       final auth = FakeAuthService(currentUser: alice);

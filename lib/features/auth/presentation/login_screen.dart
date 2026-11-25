@@ -44,7 +44,9 @@ class _LoginScreenState extends State<LoginScreen> {
       } on AuthException catch (e) {
         if (!mounted) return;
         setState(() {
-          if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+          if (e.code == 'user-not-found' ||
+              e.code == 'wrong-password' ||
+              e.code == 'invalid-credential') {
             _errorMessage = 'Neispravna e-mail adresa ili lozinka.';
           } else if (e.code == 'invalid-email') {
             _errorMessage = 'Format e-mail adrese nije valjan.';
@@ -70,9 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agri Smart Guide - Prijava'),
-      ),
+      appBar: AppBar(title: const Text('Agri Smart Guide - Prijava')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(
@@ -146,7 +146,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _isLoading ? null : _handleLogin,
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Prijavi se', style: TextStyle(fontSize: 16)),
+                          : const Text(
+                              'Prijavi se',
+                              style: TextStyle(fontSize: 16),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -156,8 +159,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _isLoading
                         ? null
                         : () {
-                      Navigator.pushReplacementNamed(context, AppRoutes.register);
-                    },
+                            Navigator.pushReplacementNamed(
+                              context,
+                              AppRoutes.register,
+                            );
+                          },
                     child: const Text('Nemate račun? Registrirajte se'),
                   ),
                 ],
