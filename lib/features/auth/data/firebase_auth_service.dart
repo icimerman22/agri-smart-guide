@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:google_sign_in/google_sign_in.dart';
 import '../domain/auth_service.dart';
 
 class FirebaseAuthService implements AuthService {
@@ -67,7 +67,27 @@ class FirebaseAuthService implements AuthService {
   }
 
   @override
-  Future<bool> signInWithGoogle() {
-    throw UnimplementedError();
+  Future<bool> signInWithGoogle() async {
+    final googleSignIn = GoogleSignIn.instance;
+    await googleSignIn.initialize(
+      serverClientId:
+          '1079203745813-72m8650jfg4jcgdvkr7k99rte1bh8c4e.apps.googleusercontent.com',
+    );
+
+    try {
+      final account = await googleSignIn.authenticate();
+      final idToken = account.authentication.idToken;
+      final credential = GoogleAuthProvider.credential(idToken: idToken);
+      await _translateErrors(() async {
+        await _auth.signInWithCredential(credential);
+      });
+      return true;
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) return false;
+      throw AuthException(
+        e.code.name,
+        message: '${e.code.name}: ${e.description}',
+      );
+    }
   }
 }
