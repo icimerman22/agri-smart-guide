@@ -15,6 +15,10 @@ class FakeAuthService implements AuthService {
   int registerCalls = 0;
   int signInCalls = 0;
   int signOutCalls = 0;
+  bool totpEmailVerified = false;
+  bool totpEnabled = false;
+  int totpVerificationEmails = 0;
+  String? lastTotpPassword;
   String? lastEmail;
   String? lastPassword;
 
@@ -80,6 +84,36 @@ class FakeAuthService implements AuthService {
     }
     passwordUpdates++;
     return true;
+  }
+
+  @override
+  Future<TotpEnrollmentStatus> totpEnrollmentStatus({
+    bool refresh = false,
+  }) async {
+    if (totpEnabled) return TotpEnrollmentStatus.enabled;
+    return totpEmailVerified
+        ? TotpEnrollmentStatus.available
+        : TotpEnrollmentStatus.emailUnverified;
+  }
+
+  @override
+  Future<void> sendTotpVerificationEmail() async {
+    totpVerificationEmails++;
+  }
+
+  @override
+  Future<TotpEnrollment> beginTotpEnrollment({required String password}) async {
+    if (!totpEmailVerified) throw const AuthException('unverified-email');
+    lastTotpPassword = password;
+    return TotpEnrollment(
+      setupKey: 'TEST-TOTP-KEY',
+      verify: (code) async {
+        if (code != '012345') {
+          throw const AuthException('invalid-verification-code');
+        }
+        totpEnabled = true;
+      },
+    );
   }
 
   @override

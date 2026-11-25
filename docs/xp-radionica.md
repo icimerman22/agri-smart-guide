@@ -13,6 +13,11 @@ Korisnici Agri Smart Guidea mogu dodatno zaštititi račun jednokratnim kodom iz
 - **Iteracija 1** — planirana 3 boda. Automatizirani kriteriji prolaze. Ostvarene bodove potvrditi nakon provjere na Androidu s testnim Firebase računom.
 - **Iteracija 2** — planirano do 5 bodova. Uključivanje 2FA ima prednost. Opseg potvrditi nakon prve iteracije.
 
-## Provjera prijave na Androidu
+## Provjera 2FA na Androidu
 
-Za prvu iteraciju potreban je Android uređaj ili emulator i testni Firebase projekt s uključenim Identity Platformom i TOTP-om. Pripremiti račun s već registriranim TOTP faktorom i kodom koji je dostupan u autentifikatorskoj aplikaciji te zaseban račun bez faktora. Na testnoj konfiguraciji prvo provjeriti običnu prijavu, zatim s TOTP računom pokušati pogrešan kod, odustati i ponoviti prijavu ispravnim kodom. Pri svakom pokušaju provjeriti kada se otvara početni zaslon.
+Potreban je Android uređaj ili emulator i testni Firebase projekt s uključenim Identity Platformom, prijavom e-adresom i lozinkom te TOTP-om.
+
+1. Prijaviti se testnim računom bez faktora. U Postavkama otvoriti **Uključi 2FA**. Ako e-adresa još nije potvrđena, poslati poruku, otvoriti poveznicu za potvrdu i u aplikaciji odabrati **Provjeri potvrdu**.
+2. Unijeti trenutnu lozinku i dodati prikazani ključ kao vremenski kod u autentifikatoru. Pogrešan kod treba biti odbijen, a valjani kod treba prikazati status **2FA je uključen**. Za provjeru odustajanja koristiti drugi račun bez faktora.
+3. Odjaviti se. U prijavi s uključenim 2FA provjeriti pogrešan kod, odustajanje i ispravan kod. Početni zaslon treba se otvoriti tek nakon uspješne potvrde.
+4. U profilu pokrenuti promjenu lozinke. Pogrešan kod ili odustajanje trebaju ostaviti staru lozinku valjanom. Nakon ispravnog koda odjaviti se i provjeriti prijavu novom lozinkom uz TOTP.

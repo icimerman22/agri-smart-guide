@@ -31,22 +31,90 @@ class FirebaseAuthService implements AuthService {
   Future<SignInResult> signIn({
     required String email,
     required String password,
-  }) async {
+  }) => _translateErrors(() async {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       return const SignedIn();
     } on FirebaseAuthMultiFactorException catch (error) {
-      final verify = _totpVerifier(error.resolver);
-      return TotpSignInRequired((code) async {
-        await verify(code);
-      });
-    } on FirebaseAuthException catch (error) {
-      throw AuthException(error.code, message: error.message);
+      return TotpSignInRequired(_totpVerifier(error.resolver));
     }
-  }
+  });
 
   @override
   Future<void> signOut() => _translateErrors(_auth.signOut);
+
+  @override
+  Future<TotpEnrollmentStatus> totpEnrollmentStatus({bool refresh = false}) =>
+      _translateErrors(() async {
+        var user = _signedInUser();
+        if (refresh) {
+          await user.reload();
+          _requireCurrentUser(user.uid);
+          user = _signedInUser();
+        }
+        if (await _hasTotp(user)) return TotpEnrollmentStatus.enabled;
+        return user.emailVerified
+            ? TotpEnrollmentStatus.available
+            : TotpEnrollmentStatus.emailUnverified;
+      });
+
+  @override
+  Future<void> sendTotpVerificationEmail() =>
+      _translateErrors(() => _signedInUser().sendEmailVerification());
+
+  @override
+  Future<TotpEnrollment> beginTotpEnrollment({required String password}) =>
+      _translateErrors(() async {
+        final user = _signedInUser();
+        final email = user.email;
+        if (email == null || !user.emailVerified) {
+          throw const AuthException('unverified-email');
+        }
+        if (await _hasTotp(user)) {
+          throw const AuthException('second-factor-already-in-use');
+        }
+
+        _requireCurrentUser(user.uid);
+        await user.reauthenticateWithCredential(
+          EmailAuthProvider.credential(email: email, password: password),
+        );
+        _requireCurrentUser(user.uid);
+        final session = await user.multiFactor.getSession();
+        final secret = await TotpMultiFactorGenerator.generateSecret(session);
+        _requireCurrentUser(user.uid);
+
+        return TotpEnrollment(
+          setupKey: secret.secretKey,
+          verify: (code) => _translateErrors(() async {
+            final deadline = secret.enrollmentCompletionDeadline;
+            if (deadline != null && !DateTime.now().isBefore(deadline)) {
+              throw const AuthException('session-expired');
+            }
+            _requireCurrentUser(user.uid);
+            final assertion =
+                await TotpMultiFactorGenerator.getAssertionForEnrollment(
+                  secret,
+                  code,
+                );
+            _requireCurrentUser(user.uid);
+            await user.multiFactor.enroll(
+              assertion,
+              displayName: 'Agri Smart Guide',
+            );
+          }),
+        );
+      });
+
+  User _signedInUser() {
+    final user = _auth.currentUser;
+    if (user == null) throw const AuthException('no-current-user');
+    return user;
+  }
+
+  Future<bool> _hasTotp(User user) async {
+    final factors = await user.multiFactor.getEnrolledFactors();
+    return factors.whereType<TotpMultiFactorInfo>().isNotEmpty;
+  }
 
   @override
   Future<bool> changePassword({

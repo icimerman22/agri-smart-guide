@@ -8,6 +8,10 @@ abstract interface class AuthService {
   });
   Future<void> signOut();
 
+  Future<TotpEnrollmentStatus> totpEnrollmentStatus({bool refresh = false});
+  Future<void> sendTotpVerificationEmail();
+  Future<TotpEnrollment> beginTotpEnrollment({required String password});
+
   /// Changes the password of the signed-in user after confirming the current
   /// password (Firebase requires recent re-authentication for this).
   /// Returns false if the requested second factor was not confirmed.
@@ -19,6 +23,15 @@ abstract interface class AuthService {
 }
 
 typedef TotpVerifier = Future<void> Function(String code);
+
+enum TotpEnrollmentStatus { emailUnverified, available, enabled }
+
+final class TotpEnrollment {
+  const TotpEnrollment({required this.setupKey, required this.verify});
+
+  final String setupKey;
+  final TotpVerifier verify;
+}
 
 sealed class SignInResult {
   const SignInResult();
