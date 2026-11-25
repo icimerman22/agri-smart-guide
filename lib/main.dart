@@ -6,6 +6,7 @@ import 'app/app.dart';
 import 'app/firebase_setup.dart';
 import 'app/routes.dart';
 import 'features/auth/data/firebase_auth_service.dart';
+import 'features/auth/data/lockout_auth_service.dart';
 import 'features/profile/data/firestore_profile_repository.dart';
 
 Future<void> main() async {
@@ -16,7 +17,9 @@ Future<void> main() async {
 
     debugPrint('Firebase uspješno inicijaliziran.');
 
-    final authService = FirebaseAuthService(auth: firebaseAuth);
+    final authService = LockoutAuthService(
+      FirebaseAuthService(auth: firebaseAuth),
+    );
     final profileRepository = FirestoreProfileRepository(
       firestore: FirebaseFirestore.instanceFor(app: firebaseAuth.app),
     );
