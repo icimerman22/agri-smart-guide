@@ -1,10 +1,27 @@
+import 'dart:async';
+
 import 'package:agri_smart_guide/features/auth/domain/auth_service.dart';
 
 class FakeAuthService implements AuthService {
-  FakeAuthService({this.currentUser});
+  FakeAuthService({AuthUser? currentUser}) : _currentUser = currentUser;
+
+  final _authChanges = StreamController<AuthUser?>.broadcast();
+  AuthUser? _currentUser;
 
   @override
-  AuthUser? currentUser;
+  AuthUser? get currentUser => _currentUser;
+
+  set currentUser(AuthUser? user) {
+    _currentUser = user;
+    _authChanges.add(user);
+  }
+
+  @override
+  Stream<AuthUser?> authStateChanges() => Stream.multi((listener) {
+    final subscription = _authChanges.stream.listen(listener.add);
+    listener.onCancel = subscription.cancel;
+    listener.add(_currentUser);
+  });
 
   AuthException? registerError;
   AuthException? signInError;

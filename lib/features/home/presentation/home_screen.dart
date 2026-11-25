@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../app/routes.dart';
-import '../../../shared/models/farm_task.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../auth/domain/auth_service.dart';
 import '../../auth/presentation/auth_keys.dart';
@@ -12,37 +11,22 @@ import '../../plantings/presentation/planting_keys.dart';
 import '../../plantings/presentation/planting_list_screen.dart';
 import '../../plots/data/plot_repository.dart';
 import '../../plots/presentation/plot_list_screen.dart';
+import '../../tasks/domain/task_repository.dart';
 import '../../tasks/presentation/task_list_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.authService});
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({
+    super.key,
+    required this.authService,
+    required this.taskRepository,
+  });
 
   final AuthService authService;
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final _tasks = ValueNotifier<List<FarmTask>>(const []);
-
-  @override
-  void dispose() {
-    _tasks.dispose();
-    super.dispose();
-  }
+  final TaskRepository taskRepository;
 
   Future<void> _handleLogout(BuildContext context) async {
     try {
-      await widget.authService.signOut();
-
-      if (!context.mounted) return;
-
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoutes.login,
-            (route) => false,
-      );
+      await authService.signOut();
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(
@@ -52,18 +36,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openCropCatalog(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const CropCatalogScreen(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const CropCatalogScreen()));
   }
 
   void _openPlotList(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PlotListScreen(
-          authService: widget.authService,
+          authService: authService,
           plotRepository: PlotRepository(),
         ),
       ),
@@ -74,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PlantingListScreen(
-          authService: widget.authService,
+          authService: authService,
           plotRepository: PlotRepository(),
           plantingRepository: FirestorePlantingRepository(),
           cropDataSource: LocalCropDataSource(),
@@ -86,14 +68,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openTaskList(BuildContext context, String ownerId) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => TaskListScreen(ownerId: ownerId, tasks: _tasks),
+        builder: (_) => TaskListScreen(
+          authService: authService,
+          ownerId: ownerId,
+          repository: taskRepository,
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.authService.currentUser;
+    final user = authService.currentUser;
 
     return Scaffold(
       appBar: AppBar(

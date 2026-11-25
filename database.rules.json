@@ -1,0 +1,25 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        "tasks": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          "$taskId": {
+            ".validate": "newData.hasChildren(['title', 'description', 'dueAt', 'type', 'priority', 'status', 'createdAt', 'updatedAt']) && (newData.child('status').val() === 'completed' ? newData.child('completedAt').isNumber() : !newData.child('completedAt').exists())",
+            "title": { ".validate": "newData.isString() && newData.val().length > 0" },
+            "description": { ".validate": "newData.isString()" },
+            "dueAt": { ".validate": "newData.isNumber()" },
+            "type": { ".validate": "newData.isString()" },
+            "priority": { ".validate": "newData.isString()" },
+            "status": { ".validate": "newData.val() === 'pending' || newData.val() === 'completed'" },
+            "createdAt": { ".validate": "newData.isNumber()" },
+            "updatedAt": { ".validate": "newData.isNumber()" }
+          }
+        }
+      }
+    }
+  }
+}

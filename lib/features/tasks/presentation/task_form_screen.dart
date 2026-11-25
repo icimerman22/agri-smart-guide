@@ -6,9 +6,15 @@ import '../../../shared/models/farm_task.dart';
 import '../../../shared/widgets/app_button.dart';
 
 class TaskFormScreen extends StatefulWidget {
-  const TaskFormScreen({super.key, required this.ownerId, this.taskToEdit});
+  const TaskFormScreen({
+    super.key,
+    required this.ownerId,
+    required this.onSave,
+    this.taskToEdit,
+  });
 
   final String ownerId;
+  final Future<void> Function(FarmTask) onSave;
   final FarmTask? taskToEdit;
 
   @override
@@ -22,6 +28,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   late final _description = TextEditingController(
     text: widget.taskToEdit?.description,
   );
+  bool _isSaving = false;
+  bool _saveFailed = false;
 
   @override
   void dispose() {
@@ -32,7 +40,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
 
   Future<void> _pickDate(FormFieldState<Timestamp> field) async {
     final today = DateTime.now();
-    final initial = field.value?.toDate() ?? today;
+    final initial = field.value?.toDate().toUtc() ?? today;
     final firstDate = DateTime(today.year - 100);
     final lastDate = DateTime(today.year + 100, 12, 31);
     final picked = await showDatePicker(
@@ -46,34 +54,50 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     );
     if (!field.mounted || picked == null) return;
 
-    field.didChange(Timestamp.fromDate(picked));
+    field.didChange(
+      Timestamp.fromDate(DateTime.utc(picked.year, picked.month, picked.day)),
+    );
     field.validate();
   }
 
-  void _save() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _save() async {
+    if (_isSaving || !_formKey.currentState!.validate()) return;
 
     final existing = widget.taskToEdit;
     final now = Timestamp.now();
-    Navigator.pop(
-      context,
-      FarmTask(
-        id: existing?.id ?? '',
-        ownerId: existing?.ownerId ?? widget.ownerId,
-        parcelId: existing?.parcelId,
-        title: _title.text.trim(),
-        description: _description.text.trim(),
-        type: existing?.type ?? 'general',
-        dueAt: _dateKey.currentState!.value!,
-        priority: existing?.priority ?? 'normal',
-        status: existing?.status ?? 'pending',
-        completedAt: existing?.completedAt,
-        costCents: existing?.costCents,
-        costCategory: existing?.costCategory,
-        createdAt: existing?.createdAt ?? now,
-        updatedAt: now,
-      ),
+    final task = FarmTask(
+      id: existing?.id ?? '',
+      ownerId: widget.ownerId,
+      parcelId: existing?.parcelId,
+      title: _title.text.trim(),
+      description: _description.text.trim(),
+      type: existing?.type ?? 'general',
+      dueAt: _dateKey.currentState!.value!,
+      priority: existing?.priority ?? 'normal',
+      status: existing?.status ?? FarmTask.pendingStatus,
+      completedAt: existing?.completedAt,
+      costCents: existing?.costCents,
+      costCategory: existing?.costCategory,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
     );
+    setState(() {
+      _isSaving = true;
+      _saveFailed = false;
+    });
+    try {
+      await widget.onSave(task);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isSaving = false;
+        _saveFailed = true;
+      });
+      return;
+    }
+    if (mounted && ModalRoute.isCurrentOf(context) == true) {
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -91,6 +115,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
           children: [
             TextFormField(
               controller: _title,
+              enabled: !_isSaving,
               decoration: const InputDecoration(labelText: 'Naziv'),
               textInputAction: TextInputAction.next,
               validator: (value) => value == null || value.trim().isEmpty
@@ -100,6 +125,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _description,
+              enabled: !_isSaving,
               decoration: const InputDecoration(labelText: 'Opis (opcionalno)'),
               minLines: 2,
               maxLines: 4,
@@ -110,14 +136,15 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
               initialValue: widget.taskToEdit?.dueAt,
               validator: (value) => value == null ? 'Odaberite datum.' : null,
               builder: (field) {
-                final date = field.value?.toDate();
+                final date = field.value?.toDate().toUtc();
                 return InkWell(
-                  onTap: () => _pickDate(field),
+                  onTap: _isSaving ? null : () => _pickDate(field),
                   child: InputDecorator(
                     decoration: InputDecoration(
                       labelText: 'Datum',
                       suffixIcon: const Icon(Icons.calendar_today_outlined),
                       errorText: field.errorText,
+                      enabled: !_isSaving,
                     ),
                     child: Text(
                       date == null ? 'Odaberite datum' : formatShortDate(date),
@@ -127,7 +154,24 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
               },
             ),
             const SizedBox(height: 32),
-            AppButton(text: 'Spremi', icon: Icons.check, onPressed: _save),
+            if (_saveFailed)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    'Spremanje zadatka nije uspjelo.',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              ),
+            AppButton(
+              text: _isSaving ? 'Spremanje…' : 'Spremi',
+              icon: Icons.check,
+              onPressed: _isSaving ? null : _save,
+            ),
           ],
         ),
       ),

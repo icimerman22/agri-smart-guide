@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "firebase emulators:exec --config ../../firebase.firestore-test.json --project demo-agri-smart-guide --only firestore \"node --test rules.test.mjs\""
+    "test": "firebase emulators:exec --config ../../firebase.firestore-test.json --project demo-agri-smart-guide --only firestore \"node --test rules.test.mjs\"",
+    "test:database": "firebase emulators:exec --config ../../firebase.auth-test.json --project demo-agri-smart-guide --only database \"node --test database.rules.test.mjs\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",

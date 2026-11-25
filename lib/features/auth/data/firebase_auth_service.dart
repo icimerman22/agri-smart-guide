@@ -9,10 +9,14 @@ class FirebaseAuthService implements AuthService {
   final FirebaseAuth _auth;
 
   @override
-  AuthUser? get currentUser {
-    final user = _auth.currentUser;
-    return user == null ? null : AuthUser(uid: user.uid, email: user.email);
-  }
+  AuthUser? get currentUser => _toAuthUser(_auth.currentUser);
+
+  @override
+  Stream<AuthUser?> authStateChanges() =>
+      _auth.authStateChanges().map(_toAuthUser);
+
+  AuthUser? _toAuthUser(User? user) =>
+      user == null ? null : AuthUser(uid: user.uid, email: user.email);
 
   @override
   Future<void> register({

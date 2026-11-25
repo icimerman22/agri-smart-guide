@@ -2,8 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'firestore_fields.dart';
 
-/// Firestore document in the tasks collection.
+/// A farm task belonging to an authenticated user.
 class FarmTask {
+  static const pendingStatus = 'pending';
+  static const completedStatus = 'completed';
+
   FarmTask({
     required this.id,
     required this.ownerId,
@@ -35,6 +38,8 @@ class FarmTask {
   final String? costCategory;
   final Timestamp createdAt;
   final Timestamp updatedAt;
+
+  bool get isCompleted => status == completedStatus;
 
   factory FarmTask.fromMap(String id, Map<String, dynamic> data) => FarmTask(
     id: id,

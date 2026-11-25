@@ -6,6 +6,7 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/profile/domain/profile_repository.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/tasks/domain/task_repository.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -17,10 +18,12 @@ class AppRoutes {
   static Map<String, WidgetBuilder> routes(
     AuthService authService,
     ProfileRepository profileRepository,
+    TaskRepository taskRepository,
   ) => {
     login: (context) => LoginScreen(authService: authService),
     register: (context) => RegisterScreen(authService: authService),
-    home: (context) => HomeScreen(authService: authService),
+    home: (context) =>
+        HomeScreen(authService: authService, taskRepository: taskRepository),
     profile: (context) => ProfileScreen(
       authService: authService,
       profileRepository: profileRepository,

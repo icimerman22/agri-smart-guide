@@ -53,13 +53,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-
-      if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoutes.home,
-        (route) => false,
-      );
     } on AuthException catch (e) {
       if (!mounted) return;
       setState(() => _errorMessage = AuthErrorMessages.registration(e.code));

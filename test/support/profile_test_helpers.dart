@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_auth_service.dart';
 import 'fake_profile_repository.dart';
+import 'fake_task_repository.dart';
 
 const testUser = AuthUser(uid: 'u1', email: 'ana@opg.hr');
 
@@ -34,7 +35,7 @@ Future<void> pumpRoute(
   await tester.pumpWidget(
     MaterialApp(
       initialRoute: route,
-      routes: AppRoutes.routes(auth, repository),
+      routes: AppRoutes.routes(auth, repository, FakeTaskRepository()),
     ),
   );
   await tester.pumpAndSettle();

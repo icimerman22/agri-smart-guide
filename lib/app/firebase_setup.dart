@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
 import '../firebase_options.dart';
@@ -27,15 +28,19 @@ Future<FirebaseAuth> _initialize() async {
         appId: '1:1234567890:android:1234567890abcdef',
         messagingSenderId: '1234567890',
         projectId: authEmulatorProject,
+        databaseURL: 'https://$authEmulatorProject-default-rtdb.firebaseio.com',
       ),
     );
-    await FirebaseAuth.instanceFor(app: firebaseApp).useAuthEmulator(
-      const String.fromEnvironment(
-        'AUTH_EMULATOR_HOST',
-        defaultValue: '10.0.2.2',
-      ),
-      9099,
+    const host = String.fromEnvironment(
+      'AUTH_EMULATOR_HOST',
+      defaultValue: '10.0.2.2',
     );
+    await FirebaseAuth.instanceFor(
+      app: firebaseApp,
+    ).useAuthEmulator(host, 9099);
+    FirebaseDatabase.instanceFor(
+      app: firebaseApp,
+    ).useDatabaseEmulator(host, 9000);
   } else {
     firebaseApp = await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

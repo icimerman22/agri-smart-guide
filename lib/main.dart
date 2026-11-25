@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'app/app.dart';
 import 'app/firebase_setup.dart';
 import 'app/routes.dart';
 import 'features/auth/data/firebase_auth_service.dart';
 import 'features/profile/data/firestore_profile_repository.dart';
+import 'features/tasks/data/realtime_task_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +30,9 @@ Future<void> main() async {
         initialRoute: initialRoute,
         authService: authService,
         profileRepository: profileRepository,
+        taskRepository: RealtimeTaskRepository(
+          FirebaseDatabase.instanceFor(app: firebaseAuth.app),
+        ),
       ),
     );
   } on FirebaseException catch (e) {
