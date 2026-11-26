@@ -199,9 +199,10 @@ service cloud.firestore {
 
     function valid_notes(data) {
       return data.keys().hasAll(['ownerId', 'title', 'content', 'photoPaths', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['ownerId', 'parcelId', 'title', 'content', 'photoPaths', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'parcelId', 'cropId', 'title', 'content', 'photoPaths', 'createdAt', 'updatedAt'])
         && (data.ownerId is string)
         && (data.get('parcelId', null) == null || (data.parcelId is string))
+        && (data.get('cropId', null) == null || (data.cropId is string))
         && (data.title is string)
         && (data.content is string)
         && (data.photoPaths is list)
@@ -212,10 +213,12 @@ service cloud.firestore {
       allow read: if owns(resource.data);
       allow create: if owns(request.resource.data)
         && valid_notes(request.resource.data)
-        && (request.resource.data.get('parcelId', null) == null || ownParcel(request.resource.data.parcelId));
+        && (request.resource.data.get('parcelId', null) == null || ownParcel(request.resource.data.parcelId))
+        && (request.resource.data.get('cropId', null) == null || cropExists(request.resource.data.cropId));
       allow update: if owns(resource.data) && owns(request.resource.data)
         && valid_notes(request.resource.data)
-        && (request.resource.data.get('parcelId', null) == null || ownParcel(request.resource.data.parcelId));
+        && (request.resource.data.get('parcelId', null) == null || ownParcel(request.resource.data.parcelId))
+        && (request.resource.data.get('cropId', null) == null || cropExists(request.resource.data.cropId));
       allow delete: if owns(resource.data);
     }
 

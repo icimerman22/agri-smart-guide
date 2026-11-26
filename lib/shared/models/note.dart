@@ -8,6 +8,7 @@ class Note {
     required this.id,
     required this.ownerId,
     this.parcelId,
+    this.cropId,
     required this.title,
     required this.content,
     required List<String> photoPaths,
@@ -18,6 +19,7 @@ class Note {
   final String id;
   final String ownerId;
   final String? parcelId;
+  final String? cropId;
   final String title;
   final String content;
   final List<String> photoPaths;
@@ -29,6 +31,12 @@ class Note {
     ownerId: readField<String>('ownerId', data, (value) => value as String)!,
     parcelId: readField<String>(
       'parcelId',
+      data,
+      (value) => value as String,
+      optional: true,
+    ),
+    cropId: readField<String>(
+      'cropId',
       data,
       (value) => value as String,
       optional: true,
@@ -63,6 +71,7 @@ class Note {
   Map<String, dynamic> toMap() => {
     'ownerId': ownerId,
     'parcelId': parcelId,
+    'cropId': cropId,
     'title': title,
     'content': content,
     'photoPaths': photoPaths,
