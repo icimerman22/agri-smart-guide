@@ -117,6 +117,20 @@ test('tasks and notes can be independent', async () => {
   for (const name of ['tasks', 'notes']) await assertSucceeds(updateDoc(ref(db('alice'), name), { parcelId: null }));
   await assertSucceeds(updateDoc(ref(db('alice'), 'notes'), { cropId: null }));
 });
+test('notes: app writes with and without links stay private to the owner', async () => {
+  const alice = db('alice');
+  const unlinked = doc(alice, 'notes', 'unlinked');
+  const note = { ownerId: 'alice', parcelId: null, cropId: null, title: 'Vrijeme', content: 'Kiša', photoPaths: [], ...dates };
+  await assertSucceeds(setDoc(unlinked, note));
+  await assertSucceeds(updateDoc(unlinked, { parcelId: 'parcel', cropId: 'crop', updatedAt: time }));
+  await assertFails(updateDoc(unlinked, { parcelId: 'bob-parcel' }));
+  await assertFails(updateDoc(unlinked, { cropId: 'missing' }));
+  await assertFails(getDoc(doc(db('bob'), 'notes', 'unlinked')));
+  await assertFails(updateDoc(doc(db('bob'), 'notes', 'unlinked'), { title: 'Preuzeto' }));
+  await assertFails(deleteDoc(doc(db('bob'), 'notes', 'unlinked')));
+  await assertFails(setDoc(doc(db('bob'), 'notes', 'bob-note'), { ...note, ownerId: 'bob', parcelId: 'parcel' }));
+  await assertSucceeds(deleteDoc(unlinked));
+});
 test('crop and planting relationships and rotation ID', async () => {
   for (const name of ['plantings', 'rotation_plans', 'notes']) await assertFails(updateDoc(ref(db('alice'), name), { cropId: 'missing' }));
   for (const plantingId of ['missing', 'bob-planting']) await assertFails(updateDoc(ref(db('alice'), 'harvests'), { plantingId }));
