@@ -14,7 +14,7 @@ const fixtures = {
   tasks: { ownerId: 'alice', parcelId: 'parcel', title: 'Work', description: '', type: 'watering', dueAt: time, priority: 'normal', status: 'pending', completedAt: null, costCents: null, costCategory: null, ...dates },
   soil_analyses: { ownerId: 'alice', parcelId: 'parcel', sampledAt: time, ph: 6.5, humusPercent: 3, nitrogenPercent: 1, phosphorusMgPer100g: 10, potassiumMgPer100g: 12, moisturePercent: null, createdAt: time },
   vegetation_records: { ownerId: 'alice', parcelId: 'parcel', measuredAt: time, ndvi: 0.7, healthStatus: 'healthy', summary: '', visualizationAssetPath: null, isDemo: true },
-  notes: { ownerId: 'alice', parcelId: 'parcel', title: 'Note', content: '', photoPaths: ['photos/a.jpg'], ...dates },
+  notes: { ownerId: 'alice', parcelId: 'parcel', cropId: 'crop', title: 'Note', content: '', photoPaths: ['photos/a.jpg'], ...dates },
   harvests: { ownerId: 'alice', parcelId: 'parcel', plantingId: 'planting', harvestedAt: time, quantityKg: 100, areaHaAtHarvest: 2.5, note: '', createdAt: time },
   notifications: { ownerId: 'alice', type: 'task', title: 'Reminder', body: '', relatedEntityType: 'tasks', relatedEntityId: 'record', createdAt: time, readAt: null },
   rotation_plans: { ownerId: 'alice', parcelId: 'parcel', seasonYear: 2027, cropId: 'crop', ...dates },
@@ -85,7 +85,8 @@ for (const [name, data] of Object.entries(fixtures)) {
     const target = ref(db('alice'), name);
     await assertFails(updateDoc(target, { unexpected: true }));
     const required = Object.keys(data).filter(key => data[key] !== null
-      && !(key === 'parcelId' && ['tasks', 'notes'].includes(name)));
+      && !(key === 'parcelId' && ['tasks', 'notes'].includes(name))
+      && !(key === 'cropId' && name === 'notes'));
     for (const key of required) {
       const incomplete = { ...data };
       delete incomplete[key];
@@ -103,7 +104,7 @@ for (const [name, data] of Object.entries(fixtures)) {
 }
 
 test('optional fields accept null or absence and reject malformed values', async () => {
-  const fields = { parcels: ['activePlantingId'], tasks: ['parcelId', 'completedAt', 'costCents', 'costCategory'], notes: ['parcelId'], soil_analyses: ['moisturePercent'], vegetation_records: ['visualizationAssetPath'], notifications: ['readAt'] };
+  const fields = { parcels: ['activePlantingId'], tasks: ['parcelId', 'completedAt', 'costCents', 'costCategory'], notes: ['parcelId', 'cropId'], soil_analyses: ['moisturePercent'], vegetation_records: ['visualizationAssetPath'], notifications: ['readAt'] };
   for (const [name, keys] of Object.entries(fields)) for (const key of keys) {
     const data = { ...fixtures[name] };
     delete data[key];
@@ -114,9 +115,24 @@ test('optional fields accept null or absence and reject malformed values', async
 });
 test('tasks and notes can be independent', async () => {
   for (const name of ['tasks', 'notes']) await assertSucceeds(updateDoc(ref(db('alice'), name), { parcelId: null }));
+  await assertSucceeds(updateDoc(ref(db('alice'), 'notes'), { cropId: null }));
+});
+test('notes: app writes with and without links stay private to the owner', async () => {
+  const alice = db('alice');
+  const unlinked = doc(alice, 'notes', 'unlinked');
+  const note = { ownerId: 'alice', parcelId: null, cropId: null, title: 'Vrijeme', content: 'Kiša', photoPaths: [], ...dates };
+  await assertSucceeds(setDoc(unlinked, note));
+  await assertSucceeds(updateDoc(unlinked, { parcelId: 'parcel', cropId: 'crop', updatedAt: time }));
+  await assertFails(updateDoc(unlinked, { parcelId: 'bob-parcel' }));
+  await assertFails(updateDoc(unlinked, { cropId: 'missing' }));
+  await assertFails(getDoc(doc(db('bob'), 'notes', 'unlinked')));
+  await assertFails(updateDoc(doc(db('bob'), 'notes', 'unlinked'), { title: 'Preuzeto' }));
+  await assertFails(deleteDoc(doc(db('bob'), 'notes', 'unlinked')));
+  await assertFails(setDoc(doc(db('bob'), 'notes', 'bob-note'), { ...note, ownerId: 'bob', parcelId: 'parcel' }));
+  await assertSucceeds(deleteDoc(unlinked));
 });
 test('crop and planting relationships and rotation ID', async () => {
-  for (const name of ['plantings', 'rotation_plans']) await assertFails(updateDoc(ref(db('alice'), name), { cropId: 'missing' }));
+  for (const name of ['plantings', 'rotation_plans', 'notes']) await assertFails(updateDoc(ref(db('alice'), name), { cropId: 'missing' }));
   for (const plantingId of ['missing', 'bob-planting']) await assertFails(updateDoc(ref(db('alice'), 'harvests'), { plantingId }));
   await env.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), 'plantings', 'other'), { ...fixtures.plantings, parcelId: 'bob-parcel' }));
   await assertFails(updateDoc(ref(db('alice'), 'harvests'), { plantingId: 'other' }));

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../features/auth/domain/auth_service.dart';
+import '../features/notes/domain/note_repository.dart';
 import '../features/profile/domain/profile_repository.dart';
 import '../features/tasks/domain/task_repository.dart';
 import 'routes.dart';
@@ -13,6 +14,7 @@ class AgriSmartGuideApp extends StatefulWidget {
   final AuthService authService;
   final ProfileRepository profileRepository;
   final TaskRepository taskRepository;
+  final NoteRepository noteRepository;
 
   const AgriSmartGuideApp({
     super.key,
@@ -20,6 +22,7 @@ class AgriSmartGuideApp extends StatefulWidget {
     required this.authService,
     required this.profileRepository,
     required this.taskRepository,
+    required this.noteRepository,
   });
 
   @override
@@ -84,6 +87,7 @@ class _AgriSmartGuideAppState extends State<AgriSmartGuideApp> {
         widget.authService,
         widget.profileRepository,
         widget.taskRepository,
+        widget.noteRepository,
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'app/app.dart';
 import 'app/firebase_setup.dart';
 import 'app/routes.dart';
 import 'features/auth/data/firebase_auth_service.dart';
+import 'features/notes/data/firestore_note_repository.dart';
 import 'features/profile/data/firestore_profile_repository.dart';
 import 'features/tasks/data/realtime_task_repository.dart';
 
@@ -19,9 +20,8 @@ Future<void> main() async {
     debugPrint('Firebase uspješno inicijaliziran.');
 
     final authService = FirebaseAuthService(auth: firebaseAuth);
-    final profileRepository = FirestoreProfileRepository(
-      firestore: FirebaseFirestore.instanceFor(app: firebaseAuth.app),
-    );
+    final firestore = FirebaseFirestore.instanceFor(app: firebaseAuth.app);
+    final profileRepository = FirestoreProfileRepository(firestore: firestore);
     final currentUser = authService.currentUser;
     final initialRoute = currentUser != null ? AppRoutes.home : AppRoutes.login;
 
@@ -33,6 +33,7 @@ Future<void> main() async {
         taskRepository: RealtimeTaskRepository(
           FirebaseDatabase.instanceFor(app: firebaseAuth.app),
         ),
+        noteRepository: FirestoreNoteRepository(firestore: firestore),
       ),
     );
   } on FirebaseException catch (e) {

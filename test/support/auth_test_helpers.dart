@@ -1,5 +1,8 @@
 import 'package:agri_smart_guide/app/app.dart';
+import 'package:agri_smart_guide/features/notes/data/firestore_note_repository.dart';
+import 'package:agri_smart_guide/features/notes/domain/note_repository.dart';
 import 'package:agri_smart_guide/features/tasks/domain/task_repository.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,6 +15,7 @@ Future<void> pumpAuthApp(
   FakeAuthService auth,
   String initialRoute, {
   TaskRepository? taskRepository,
+  NoteRepository? noteRepository,
 }) async {
   await tester.pumpWidget(
     AgriSmartGuideApp(
@@ -19,6 +23,9 @@ Future<void> pumpAuthApp(
       authService: auth,
       profileRepository: FakeProfileRepository(),
       taskRepository: taskRepository ?? FakeTaskRepository(),
+      noteRepository:
+          noteRepository ??
+          FirestoreNoteRepository(firestore: FakeFirebaseFirestore()),
     ),
   );
   await tester.pumpAndSettle();

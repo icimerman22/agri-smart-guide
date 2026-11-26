@@ -1,8 +1,10 @@
 import 'package:agri_smart_guide/app/routes.dart';
 import 'package:agri_smart_guide/features/auth/domain/auth_service.dart';
+import 'package:agri_smart_guide/features/notes/data/firestore_note_repository.dart';
 import 'package:agri_smart_guide/features/profile/domain/profile_repository.dart';
 import 'package:agri_smart_guide/shared/models/user_profile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -35,7 +37,12 @@ Future<void> pumpRoute(
   await tester.pumpWidget(
     MaterialApp(
       initialRoute: route,
-      routes: AppRoutes.routes(auth, repository, FakeTaskRepository()),
+      routes: AppRoutes.routes(
+        auth,
+        repository,
+        FakeTaskRepository(),
+        FirestoreNoteRepository(firestore: FakeFirebaseFirestore()),
+      ),
     ),
   );
   await tester.pumpAndSettle();

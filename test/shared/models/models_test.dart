@@ -563,6 +563,7 @@ void main() {
     Map<String, dynamic> fixture() => {
       'ownerId': 'value',
       'parcelId': 'value',
+      'cropId': 'value',
       'title': 'value',
       'content': 'value',
       'photoPaths': <String>['photos/a.jpg'],
@@ -599,20 +600,25 @@ void main() {
         );
       }
     });
-    test('parcelId accepts absent and null but rejects wrong type', () {
-      expect(
-        Note.fromMap('id', fixture()..remove('parcelId')).parcelId,
-        isNull,
-      );
-      expect(
-        Note.fromMap('id', fixture()..['parcelId'] = null).toMap()['parcelId'],
-        isNull,
-      );
-      expect(
-        () => Note.fromMap('id', fixture()..['parcelId'] = Object()),
-        throwsFormatException,
-      );
-    });
+    test(
+      'parcelId and cropId accept absent and null but reject wrong type',
+      () {
+        for (final key in <String>['parcelId', 'cropId']) {
+          expect(
+            Note.fromMap('id', fixture()..remove(key)).toMap()[key],
+            isNull,
+          );
+          expect(
+            Note.fromMap('id', fixture()..[key] = null).toMap()[key],
+            isNull,
+          );
+          expect(
+            () => Note.fromMap('id', fixture()..[key] = Object()),
+            throwsFormatException,
+          );
+        }
+      },
+    );
     test('photoPaths rejects invalid elements and cannot be mutated', () {
       expect(
         () => Note.fromMap('id', fixture()..['photoPaths'] = [false]),
