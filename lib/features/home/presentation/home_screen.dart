@@ -6,6 +6,9 @@ import '../../auth/presentation/auth_keys.dart';
 import '../../profile/presentation/profile_keys.dart';
 import '../../crops/presentation/crop_catalog_screen.dart';
 import '../../crops/data/local_crop_data_source.dart';
+import '../../notes/domain/note_repository.dart';
+import '../../notes/presentation/note_keys.dart';
+import '../../notes/presentation/note_list_screen.dart';
 import '../../plantings/data/firestore_planting_repository.dart';
 import '../../plantings/presentation/planting_keys.dart';
 import '../../plantings/presentation/planting_list_screen.dart';
@@ -19,10 +22,12 @@ class HomeScreen extends StatelessWidget {
     super.key,
     required this.authService,
     required this.taskRepository,
+    required this.noteRepository,
   });
 
   final AuthService authService;
   final TaskRepository taskRepository;
+  final NoteRepository noteRepository;
 
   Future<void> _handleLogout(BuildContext context) async {
     try {
@@ -72,6 +77,20 @@ class HomeScreen extends StatelessWidget {
           authService: authService,
           ownerId: ownerId,
           repository: taskRepository,
+        ),
+      ),
+    );
+  }
+
+  void _openNoteList(BuildContext context, String ownerId) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => NoteListScreen(
+          authService: authService,
+          ownerId: ownerId,
+          noteRepository: noteRepository,
+          plotRepository: PlotRepository(),
+          cropDataSource: LocalCropDataSource(),
         ),
       ),
     );
@@ -150,6 +169,16 @@ class HomeScreen extends StatelessWidget {
                 onPressed: user == null
                     ? null
                     : () => _openTaskList(context, user.uid),
+              ),
+
+              const SizedBox(height: 12),
+
+              AppButton(
+                key: NoteKeys.openNoteList,
+                text: 'Bilješke',
+                onPressed: user == null
+                    ? null
+                    : () => _openNoteList(context, user.uid),
               ),
 
               const SizedBox(height: 12),
