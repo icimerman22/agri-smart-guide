@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../shared/models/note.dart';
 import '../domain/note_repository.dart';
+import '../domain/note_validators.dart';
 
 class FirestoreNoteRepository implements NoteRepository {
   FirestoreNoteRepository({
@@ -87,23 +88,17 @@ class FirestoreNoteRepository implements NoteRepository {
   }
 
   Map<String, dynamic> _validatedFields(NoteDraft draft) {
-    final title = draft.title.trim();
-    final content = draft.content.trim();
-    if (title.isEmpty) {
-      throw const NoteException(
-        NoteException.missingTitle,
-        message: 'Naslov bilješke je obavezan.',
-      );
+    final titleError = NoteValidators.title(draft.title);
+    if (titleError != null) {
+      throw NoteException(NoteException.invalidTitle, message: titleError);
     }
-    if (content.isEmpty) {
-      throw const NoteException(
-        NoteException.missingContent,
-        message: 'Sadržaj bilješke je obavezan.',
-      );
+    final contentError = NoteValidators.content(draft.content);
+    if (contentError != null) {
+      throw NoteException(NoteException.invalidContent, message: contentError);
     }
     return {
-      'title': title,
-      'content': content,
+      'title': draft.title.trim(),
+      'content': draft.content.trim(),
       'parcelId': draft.parcelId,
       'cropId': draft.cropId,
     };

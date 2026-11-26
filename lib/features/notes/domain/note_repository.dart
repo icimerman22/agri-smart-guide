@@ -36,8 +36,8 @@ abstract interface class NoteRepository {
 class NoteException implements Exception {
   const NoteException(this.code, {this.message});
 
-  static const missingTitle = 'missing-title';
-  static const missingContent = 'missing-content';
+  static const invalidTitle = 'invalid-title';
+  static const invalidContent = 'invalid-content';
   static const noteNotFound = 'note-not-found';
   static const notNoteOwner = 'not-note-owner';
 
