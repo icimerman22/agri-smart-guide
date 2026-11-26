@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/formatters/date_format.dart';
 import '../../../shared/models/note.dart';
 import '../domain/note_repository.dart';
+import 'note_form_screen.dart';
 import 'note_keys.dart';
 import 'note_link_options.dart';
 
@@ -29,6 +30,19 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     widget.noteId,
   );
   bool _isDeleting = false;
+
+  void _openEdit(Note note) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => NoteFormScreen(
+          ownerId: widget.ownerId,
+          noteRepository: widget.noteRepository,
+          linkOptions: widget.linkOptions,
+          noteToEdit: note,
+        ),
+      ),
+    );
+  }
 
   Future<void> _confirmDelete(Note note) async {
     final confirmed = await showDialog<bool>(
@@ -158,13 +172,20 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           appBar: AppBar(
             title: const Text('Bilješka'),
             actions: [
-              if (note != null && !snapshot.hasError)
+              if (note != null && !snapshot.hasError) ...[
+                IconButton(
+                  key: NoteKeys.edit,
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: 'Uredi bilješku',
+                  onPressed: _isDeleting ? null : () => _openEdit(note),
+                ),
                 IconButton(
                   key: NoteKeys.delete,
                   icon: const Icon(Icons.delete_outline),
                   tooltip: 'Obriši bilješku',
                   onPressed: _isDeleting ? null : () => _confirmDelete(note),
                 ),
+              ],
             ],
           ),
           body: body,

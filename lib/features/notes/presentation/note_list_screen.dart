@@ -7,6 +7,7 @@ import '../../crops/data/local_crop_data_source.dart';
 import '../../plots/data/plot_repository.dart';
 import '../domain/note_repository.dart';
 import 'note_detail_screen.dart';
+import 'note_form_screen.dart';
 import 'note_keys.dart';
 import 'note_link_options.dart';
 
@@ -34,13 +35,19 @@ class _NoteListScreenState extends State<NoteListScreen> {
   late Stream<List<Note>> _notes = widget.noteRepository.watchNotes(
     widget.ownerId,
   );
-  late final NoteLinkOptions _linkOptions = NoteLinkOptions(
-    ownerId: widget.ownerId,
-    plotRepository: widget.plotRepository,
-    cropDataSource: widget.cropDataSource,
-  );
+  late final NoteLinkOptions _linkOptions;
 
   bool get _hasSession => widget.authService.currentUser?.uid == widget.ownerId;
+
+  @override
+  void initState() {
+    super.initState();
+    _linkOptions = NoteLinkOptions(
+      ownerId: widget.ownerId,
+      plotRepository: widget.plotRepository,
+      cropDataSource: widget.cropDataSource,
+    );
+  }
 
   @override
   void dispose() {
@@ -56,6 +63,20 @@ class _NoteListScreenState extends State<NoteListScreen> {
         builder: (_) => NoteDetailScreen(
           ownerId: widget.ownerId,
           noteId: note.id,
+          noteRepository: widget.noteRepository,
+          linkOptions: _linkOptions,
+        ),
+      ),
+    );
+  }
+
+  void _openForm() {
+    if (!_hasSession) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => NoteFormScreen(
+          ownerId: widget.ownerId,
           noteRepository: widget.noteRepository,
           linkOptions: _linkOptions,
         ),
@@ -142,6 +163,12 @@ class _NoteListScreenState extends State<NoteListScreen> {
           }
           return _buildList(snapshot.data ?? const []);
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        key: NoteKeys.openForm,
+        onPressed: _openForm,
+        tooltip: 'Dodaj bilješku',
+        child: const Icon(Icons.add),
       ),
     );
   }
