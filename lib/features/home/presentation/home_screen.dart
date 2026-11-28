@@ -5,7 +5,7 @@ import '../../auth/domain/auth_service.dart';
 import '../../auth/presentation/auth_keys.dart';
 import '../../profile/presentation/profile_keys.dart';
 import '../../crops/presentation/crop_catalog_screen.dart';
-import '../../crops/data/local_crop_data_source.dart';
+import '../../crops/data/firestore_crop_data_source.dart';
 import '../../notes/domain/note_repository.dart';
 import '../../notes/presentation/note_keys.dart';
 import '../../notes/presentation/note_list_screen.dart';
@@ -64,7 +64,7 @@ class HomeScreen extends StatelessWidget {
           authService: authService,
           plotRepository: PlotRepository(),
           plantingRepository: FirestorePlantingRepository(),
-          cropDataSource: LocalCropDataSource(),
+          cropDataSource: FirestoreCropDataSource(),
         ),
       ),
     );
@@ -90,7 +90,7 @@ class HomeScreen extends StatelessWidget {
           ownerId: ownerId,
           noteRepository: noteRepository,
           plotRepository: PlotRepository(),
-          cropDataSource: LocalCropDataSource(),
+          cropDataSource: FirestoreCropDataSource(),
         ),
       ),
     );

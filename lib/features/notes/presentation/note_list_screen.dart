@@ -1,9 +1,9 @@
+import 'package:agri_smart_guide/features/crops/data/crop_catalog_data_source.dart';
 import 'package:flutter/material.dart';
 
 import '../../../shared/formatters/date_format.dart';
 import '../../../shared/models/note.dart';
 import '../../auth/domain/auth_service.dart';
-import '../../crops/data/local_crop_data_source.dart';
 import '../../plots/data/plot_repository.dart';
 import '../domain/note_repository.dart';
 import 'note_detail_screen.dart';
@@ -25,7 +25,7 @@ class NoteListScreen extends StatefulWidget {
   final String ownerId;
   final NoteRepository noteRepository;
   final PlotRepository plotRepository;
-  final LocalCropDataSource cropDataSource;
+  final CropCatalogDataSource cropDataSource;
 
   @override
   State<NoteListScreen> createState() => _NoteListScreenState();

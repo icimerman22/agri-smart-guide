@@ -1,52 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:agri_smart_guide/features/crops/data/local_crop_data_source.dart';
-import 'package:agri_smart_guide/features/crops/domain/models/crop_model.dart';
+import 'package:agri_smart_guide/shared/models/crop.dart';
+import 'package:agri_smart_guide/features/crops/data/crop_catalog_data_source.dart';
 import 'package:agri_smart_guide/features/crops/presentation/crop_catalog_screen.dart';
 
-class _FakeCropDataSource extends LocalCropDataSource {
+class _FakeCropDataSource implements CropCatalogDataSource {
   @override
-  Future<List<CropModel>> loadCrops() async {
+  Future<List<Crop>> loadCrops() async {
     return [
-      const CropModel(
+      Crop(
         id: 'tomato',
         name: 'Rajčica',
+        category: 'Povrće',
         description: 'Povrtna kultura',
+        sowingMonths: [4, 5],
+        growthDays: 90,
+        waterRequirement: 'Redovito zalijevanje',
+        rowSpacingCm: 70.0,
+        plantSpacingCm: 40.0,
+        optimalPhMin: 6.0,
+        optimalPhMax: 7.0,
         plantingPeriod: 'Proljeće',
         growingConditions: 'Sunčan položaj',
-        growingDurationDays: 90,
-        waterNeeds: 'Redovito zalijevanje',
       ),
-      const CropModel(
+      Crop(
         id: 'pepper',
         name: 'Paprika',
+        category: 'Povrće',
         description: 'Toploljubiva kultura',
+        sowingMonths: [4, 5],
+        growthDays: 100,
+        waterRequirement: 'Umjereno zalijevanje',
+        rowSpacingCm: 60.0,
+        plantSpacingCm: 40.0,
+        optimalPhMin: 6.0,
+        optimalPhMax: 7.0,
         plantingPeriod: 'Proljeće',
         growingConditions: 'Topao položaj',
-        growingDurationDays: 100,
-        waterNeeds: 'Umjereno zalijevanje',
       ),
     ];
   }
 }
 
-class _EmptyCropDataSource extends LocalCropDataSource {
+class _EmptyCropDataSource implements CropCatalogDataSource {
   @override
-  Future<List<CropModel>> loadCrops() async {
+  Future<List<Crop>> loadCrops() async {
     return [];
   }
 }
 
-class _FailingCropDataSource extends LocalCropDataSource {
+class _FailingCropDataSource implements CropCatalogDataSource {
   @override
-  Future<List<CropModel>> loadCrops() async {
+  Future<List<Crop>> loadCrops() async {
     throw StateError('Testna pogreška');
   }
 }
 
 void main() {
-  Widget createApp(LocalCropDataSource dataSource) {
+  Widget createApp(CropCatalogDataSource dataSource) {
     return MaterialApp(home: CropCatalogScreen(dataSource: dataSource));
   }
 

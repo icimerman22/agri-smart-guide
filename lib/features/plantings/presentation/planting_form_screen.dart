@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/app_button.dart';
 import '../../auth/domain/auth_service.dart';
-import '../../crops/data/local_crop_data_source.dart';
-import '../../crops/domain/models/crop_model.dart';
 import '../../plots/data/plot_repository.dart';
 import '../../plots/domain/plot_model.dart';
 import '../domain/planting_repository.dart';
 import 'planting_keys.dart';
+import 'package:agri_smart_guide/shared/models/crop.dart';
+import '../../crops/data/crop_catalog_data_source.dart';
 
 class PlantingFormScreen extends StatefulWidget {
   const PlantingFormScreen({
@@ -22,7 +22,7 @@ class PlantingFormScreen extends StatefulWidget {
   final AuthService authService;
   final PlotRepository plotRepository;
   final PlantingRepository plantingRepository;
-  final LocalCropDataSource cropDataSource;
+  final CropCatalogDataSource cropDataSource;
   final DateTime Function()? today;
 
   @override
@@ -33,10 +33,10 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _dateController = TextEditingController();
 
-  late Future<List<CropModel>> _cropsFuture;
+  late Future<List<Crop>> _cropsFuture;
   Stream<List<Plot>>? _plotsStream;
 
-  List<CropModel> _crops = const [];
+  List<Crop> _crops = const [];
   List<Plot> _plots = const [];
   String? _selectedCropId;
   String? _selectedParcelId;
@@ -148,7 +148,7 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
         parcelId: plot.id,
         cropId: crop.id,
         plantedAt: plantedAt,
-        growingDurationDays: crop.growingDurationDays,
+        growingDurationDays: crop.growthDays,
       );
       if (!mounted) return;
 
@@ -239,7 +239,7 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
       return const Center(child: Text('Korisnik nije prijavljen.'));
     }
 
-    return FutureBuilder<List<CropModel>>(
+    return FutureBuilder<List<Crop>>(
       future: _cropsFuture,
       builder: (context, cropsSnapshot) {
         if (cropsSnapshot.connectionState != ConnectionState.done) {

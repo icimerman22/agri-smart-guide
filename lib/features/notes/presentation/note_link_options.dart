@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../crops/data/local_crop_data_source.dart';
-import '../../crops/domain/models/crop_model.dart';
+import '../../../shared/models/crop.dart';
+import '../../crops/data/crop_catalog_data_source.dart';
 import '../../plots/data/plot_repository.dart';
 import '../../plots/domain/plot_model.dart';
 
@@ -11,7 +11,7 @@ class NoteLinkOptions extends ChangeNotifier {
   NoteLinkOptions({
     required String ownerId,
     required PlotRepository plotRepository,
-    required LocalCropDataSource cropDataSource,
+    required CropCatalogDataSource cropDataSource,
   }) {
     _plotSubscription = plotRepository
         .getPlots(ownerId)
@@ -35,14 +35,14 @@ class NoteLinkOptions extends ChangeNotifier {
   bool _disposed = false;
 
   List<Plot> _plots = const [];
-  List<CropModel> _crops = const [];
+  List<Crop> _crops = const [];
   bool _plotsLoaded = false;
   bool _cropsLoaded = false;
   bool _plotsFailed = false;
   bool _cropsFailed = false;
 
   List<Plot> get plots => _plots;
-  List<CropModel> get crops => _crops;
+  List<Crop> get crops => _crops;
   bool get plotsLoaded => _plotsLoaded;
   bool get cropsLoaded => _cropsLoaded;
   bool get plotsFailed => _plotsFailed;

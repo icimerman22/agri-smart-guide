@@ -1,12 +1,13 @@
 
 import 'package:flutter/material.dart';
+import 'package:agri_smart_guide/shared/models/crop.dart';
 
-import '../data/local_crop_data_source.dart';
-import '../domain/models/crop_model.dart';
+import '../data/crop_catalog_data_source.dart';
+import '../data/firestore_crop_data_source.dart';
 import 'crop_detail_screen.dart';
 
 class CropCatalogScreen extends StatefulWidget {
-  final LocalCropDataSource? dataSource;
+  final CropCatalogDataSource? dataSource;
 
   const CropCatalogScreen({
     super.key,
@@ -19,7 +20,7 @@ class CropCatalogScreen extends StatefulWidget {
 }
 
 class _CropCatalogScreenState extends State<CropCatalogScreen> {
-  late Future<List<CropModel>> _cropsFuture;
+  late Future<List<Crop>> _cropsFuture;
 
   String _searchQuery = '';
 
@@ -31,14 +32,14 @@ class _CropCatalogScreenState extends State<CropCatalogScreen> {
 
   void _loadCrops() {
     _cropsFuture =
-        (widget.dataSource ?? LocalCropDataSource()).loadCrops();
+        (widget.dataSource ?? FirestoreCropDataSource()).loadCrops();
   }
 
   void _retry() {
     setState(_loadCrops);
   }
 
-  void _openDetails(CropModel crop) {
+  void _openDetails(Crop crop) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => CropDetailScreen(crop: crop),
@@ -72,8 +73,9 @@ class _CropCatalogScreenState extends State<CropCatalogScreen> {
               ),
             ),
           ),
+
           Expanded(
-            child: FutureBuilder<List<CropModel>>(
+            child: FutureBuilder<List<Crop>>(
               future: _cropsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState !=
@@ -111,7 +113,7 @@ class _CropCatalogScreenState extends State<CropCatalogScreen> {
                   );
                 }
 
-                final allCrops = snapshot.data ?? <CropModel>[];
+                final allCrops = snapshot.data ?? <Crop>[];
 
                 final filteredCrops = allCrops.where((crop) {
                   final searchText =
@@ -147,7 +149,10 @@ class _CropCatalogScreenState extends State<CropCatalogScreen> {
 
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(
-                    16, 0, 16, 16,
+                    16,
+                    0,
+                    16,
+                    16,
                   ),
                   itemCount: filteredCrops.length,
                   separatorBuilder: (_, _) =>
@@ -155,13 +160,40 @@ class _CropCatalogScreenState extends State<CropCatalogScreen> {
                   itemBuilder: (context, index) {
                     final crop = filteredCrops[index];
 
+                    final imageUrl = crop.imageUrl;
+
+                    final plantingPeriod =
+                    crop.plantingPeriod?.trim();
+
                     return Card(
                       clipBehavior: Clip.antiAlias,
                       child: ListTile(
-                        contentPadding:
-                        const EdgeInsets.all(12),
+                        contentPadding: const EdgeInsets.all(12),
                         leading: CircleAvatar(
-                          child: const Icon(Icons.eco_outlined),
+                          radius: 26,
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .primaryContainer,
+                          child: imageUrl == null ||
+                              imageUrl.trim().isEmpty
+                              ? const Icon(Icons.eco_outlined)
+                              : ClipOval(
+                            child: Image.network(
+                              imageUrl,
+                              width: 52,
+                              height: 52,
+                              fit: BoxFit.cover,
+                              errorBuilder: (
+                                  context,
+                                  error,
+                                  stackTrace,
+                                  ) {
+                                return const Icon(
+                                  Icons.eco_outlined,
+                                );
+                              },
+                            ),
+                          ),
                         ),
                         title: Text(
                           crop.name,
@@ -170,17 +202,16 @@ class _CropCatalogScreenState extends State<CropCatalogScreen> {
                           ),
                         ),
                         subtitle: Padding(
-                          padding: const EdgeInsets.only(
-                            top: 4,
-                          ),
+                          padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            'Sadnja: ${crop.plantingPeriod}',
+                            'Sadnja: ${plantingPeriod == null || plantingPeriod.isEmpty ? 'Nije navedeno' : plantingPeriod}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        trailing:
-                        const Icon(Icons.chevron_right),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                        ),
                         onTap: () => _openDetails(crop),
                       ),
                     );
