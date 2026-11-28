@@ -1,10 +1,8 @@
 
 import 'package:flutter/material.dart';
-
-import '../domain/models/crop_model.dart';
-
+import 'package:agri_smart_guide/shared/models/crop.dart';
 class CropDetailScreen extends StatelessWidget {
-  final CropModel crop;
+  final Crop crop;
 
   const CropDetailScreen({
     super.key,
@@ -23,18 +21,33 @@ class CropDetailScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Container(
-              height: 140,
-              decoration: BoxDecoration(
-                color: colors.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
+
+          Container(
+          height: 180,
+          decoration: BoxDecoration(
+            color: colors.primaryContainer,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: crop.imageUrl == null
+              ? Icon(
+            Icons.eco,
+            size: 72,
+            color: colors.onPrimaryContainer,
+          )
+              : Image.network(
+            crop.imageUrl!,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(
                 Icons.eco,
                 size: 72,
                 color: colors.onPrimaryContainer,
-              ),
-            ),
+              );
+            },
+          ),
+        ),
             const SizedBox(height: 20),
             Text(
               crop.name,
@@ -51,12 +64,12 @@ class CropDetailScreen extends StatelessWidget {
             _CropInfoCard(
               icon: Icons.calendar_month_outlined,
               title: 'Preporučeno razdoblje sadnje',
-              value: crop.plantingPeriod,
+              value: crop.plantingPeriodText,
             ),
             _CropInfoCard(
               icon: Icons.wb_sunny_outlined,
               title: 'Uvjeti uzgoja',
-              value: crop.growingConditions,
+              value: crop.growingConditionsText,
             ),
             _CropInfoCard(
               icon: Icons.schedule,
