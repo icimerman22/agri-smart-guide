@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../shared/models/planting.dart';
 import '../../auth/domain/auth_service.dart';
-import '../../crops/data/local_crop_data_source.dart';
-import '../../crops/domain/models/crop_model.dart';
+import 'package:agri_smart_guide/shared/models/crop.dart';
+import '../../crops/data/crop_catalog_data_source.dart';
 import '../../plots/data/plot_repository.dart';
 import '../../plots/domain/plot_model.dart';
 import '../domain/planting_formatters.dart';
@@ -25,14 +25,14 @@ class PlantingDetailScreen extends StatefulWidget {
   final AuthService authService;
   final PlotRepository plotRepository;
   final PlantingRepository plantingRepository;
-  final LocalCropDataSource cropDataSource;
+  final CropCatalogDataSource cropDataSource;
 
   @override
   State<PlantingDetailScreen> createState() => _PlantingDetailScreenState();
 }
 
 class _PlantingDetailScreenState extends State<PlantingDetailScreen> {
-  late final Future<List<CropModel>> _cropsFuture;
+  late final Future<List<Crop>> _cropsFuture;
   late final Stream<Planting?> _plantingStream;
   Stream<List<Plot>>? _plotsStream;
   bool _isSaving = false;
@@ -115,7 +115,7 @@ class _PlantingDetailScreenState extends State<PlantingDetailScreen> {
 
   Widget _buildDetails(
     Planting planting,
-    Map<String, CropModel> crops,
+    Map<String, Crop> crops,
     Map<String, Plot> plots,
   ) {
     final cropName = crops[planting.cropId]?.name ?? planting.cropId;
@@ -170,11 +170,11 @@ class _PlantingDetailScreenState extends State<PlantingDetailScreen> {
       return const Center(child: Text('Korisnik nije prijavljen.'));
     }
 
-    return FutureBuilder<List<CropModel>>(
+    return FutureBuilder<List<Crop>>(
       future: _cropsFuture,
       builder: (context, cropsSnapshot) {
         final crops = {
-          for (final c in cropsSnapshot.data ?? <CropModel>[]) c.id: c,
+          for (final c in cropsSnapshot.data ?? <Crop>[]) c.id: c,
         };
 
         return StreamBuilder<List<Plot>>(
