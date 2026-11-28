@@ -1,6 +1,5 @@
 import 'package:agri_smart_guide/features/auth/domain/auth_service.dart';
-import 'package:agri_smart_guide/features/crops/data/local_crop_data_source.dart';
-import 'package:agri_smart_guide/features/crops/domain/models/crop_model.dart';
+import '../../../support/fake_crop_catalog_data_source.dart';
 import 'package:agri_smart_guide/features/plantings/data/firestore_planting_repository.dart';
 import 'package:agri_smart_guide/features/plantings/presentation/planting_detail_screen.dart';
 import 'package:agri_smart_guide/features/plantings/presentation/planting_form_screen.dart';
@@ -13,30 +12,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/fake_auth_service.dart';
 import '../../../support/planting_test_helpers.dart';
-
-class _FakeCropDataSource extends LocalCropDataSource {
-  @override
-  Future<List<CropModel>> loadCrops() async => const [
-    CropModel(
-      id: 'tomato',
-      name: 'Rajčica',
-      description: 'Povrtna kultura',
-      plantingPeriod: 'Proljeće',
-      growingConditions: 'Sunčan položaj',
-      growingDurationDays: 90,
-      waterNeeds: 'Redovito zalijevanje',
-    ),
-    CropModel(
-      id: 'lettuce',
-      name: 'Salata',
-      description: 'Lisnata kultura',
-      plantingPeriod: 'Proljeće',
-      growingConditions: 'Umjerene temperature',
-      growingDurationDays: 50,
-      waterNeeds: 'Redovito zalijevanje',
-    ),
-  ];
-}
 
 void main() {
   late FakeFirebaseFirestore firestore;
@@ -54,7 +29,7 @@ void main() {
           authService: auth,
           plotRepository: PlotRepository(firestore: firestore),
           plantingRepository: FirestorePlantingRepository(firestore: firestore),
-          cropDataSource: _FakeCropDataSource(),
+          cropDataSource:FakeCropCatalogDataSource(),
         ),
       ),
     );
@@ -69,7 +44,7 @@ void main() {
           authService: auth,
           plotRepository: PlotRepository(firestore: firestore),
           plantingRepository: FirestorePlantingRepository(firestore: firestore),
-          cropDataSource: _FakeCropDataSource(),
+          cropDataSource: FakeCropCatalogDataSource(),
         ),
       ),
     );

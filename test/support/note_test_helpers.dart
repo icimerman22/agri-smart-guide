@@ -1,46 +1,58 @@
 import 'package:agri_smart_guide/features/auth/domain/auth_service.dart';
-import 'package:agri_smart_guide/features/crops/data/local_crop_data_source.dart';
-import 'package:agri_smart_guide/features/crops/domain/models/crop_model.dart';
 import 'package:agri_smart_guide/features/notes/data/firestore_note_repository.dart';
 import 'package:agri_smart_guide/features/notes/domain/note_repository.dart';
 import 'package:agri_smart_guide/features/notes/presentation/note_list_screen.dart';
 import 'package:agri_smart_guide/features/plots/data/plot_repository.dart';
+import 'package:agri_smart_guide/shared/models/crop.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:agri_smart_guide/features/crops/data/crop_catalog_data_source.dart';
 
 import 'fake_auth_service.dart';
 
 const noteAlice = AuthUser(uid: 'alice', email: 'alice@example.com');
 const noteBob = AuthUser(uid: 'bob', email: 'bob@example.com');
 
-class FakeNoteCropDataSource extends LocalCropDataSource {
+class FakeNoteCropDataSource implements CropCatalogDataSource {
   FakeNoteCropDataSource({this.fail = false});
 
   final bool fail;
 
   @override
-  Future<List<CropModel>> loadCrops() async {
+  Future<List<Crop>> loadCrops() async {
     if (fail) throw const FormatException('Neispravan katalog');
-    return const [
-      CropModel(
+    return [
+      Crop(
         id: 'tomato',
         name: 'Rajčica',
+        category: 'plodovito povrće',
         description: '',
+        sowingMonths: [3, 4, 5],
+        growthDays: 90,
+        waterRequirement: '',
+        rowSpacingCm: 70.0,
+        plantSpacingCm: 40.0,
+        optimalPhMin: 6.0,
+        optimalPhMax: 7.0,
         plantingPeriod: '',
         growingConditions: '',
-        growingDurationDays: 90,
-        waterNeeds: '',
       ),
-      CropModel(
+      Crop(
         id: 'lettuce',
         name: 'Salata',
+        category: 'lisnato povrće',
         description: '',
+        sowingMonths: [3, 4, 5],
+        growthDays: 50,
+        waterRequirement: '',
+        rowSpacingCm: 30.0,
+        plantSpacingCm: 25.0,
+        optimalPhMin: 6.0,
+        optimalPhMax: 7.0,
         plantingPeriod: '',
         growingConditions: '',
-        growingDurationDays: 50,
-        waterNeeds: '',
       ),
     ];
   }
@@ -75,7 +87,7 @@ Future<void> pumpNoteList(
   String ownerId = 'alice',
   NoteRepository? noteRepository,
   PlotRepository? plotRepository,
-  LocalCropDataSource? cropDataSource,
+  CropCatalogDataSource? cropDataSource,
 }) async {
   tester.view.physicalSize = const Size(1080, 3000);
   tester.view.devicePixelRatio = 1.0;
